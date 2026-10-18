@@ -1,0 +1,360 @@
+{
+ "id": "l-launch",
+ "track": "long",
+ "principle": "everything, asked for in plain words",
+ "duration": 60.0,
+ "fps": 60,
+ "roles": [
+  "ball",
+  "puck",
+  "toss",
+  "card",
+  "tag",
+  "badge",
+  "feature-1",
+  "feature-2",
+  "feature-3",
+  "feature-4",
+  "feature-5",
+  "read-1",
+  "read-2",
+  "read-3",
+  "line",
+  "headline",
+  "world",
+  "stop-1",
+  "stop-2",
+  "stop-3",
+  "reply",
+  "cursor",
+  "count",
+  "prompt",
+  "rise-1",
+  "rise-2",
+  "accent",
+  "word-1",
+  "word-2",
+  "word-3",
+  "word-4",
+  "mark",
+  "wordmark"
+ ],
+ "checks": [
+  {
+   "type": "segment",
+   "name": "1 ball",
+   "roles": [
+    "ball"
+   ],
+   "checks": [
+    {
+     "type": "bounce",
+     "role": "ball",
+     "contacts": [
+      3,
+      12
+     ]
+    }
+   ]
+  },
+  {
+   "type": "segment",
+   "name": "2 puck",
+   "roles": [
+    "puck"
+   ],
+   "checks": [
+    {
+     "type": "struck",
+     "role": "puck",
+     "key": "cx"
+    }
+   ]
+  },
+  {
+   "type": "segment",
+   "name": "3 toss",
+   "roles": [
+    "toss"
+   ],
+   "checks": [
+    {
+     "type": "arc",
+     "role": "toss",
+     "min_dev": 0.12
+    }
+   ]
+  },
+  {
+   "type": "segment",
+   "name": "4 card",
+   "roles": [
+    "card",
+    "tag"
+   ],
+   "checks": [
+    {
+     "type": "move",
+     "role": "card",
+     "key": "cx",
+     "ease_out": 0.35,
+     "name": "card"
+    },
+    {
+     "type": "swing",
+     "card": "card",
+     "tag": "tag",
+     "amp": [
+      4,
+      45
+     ]
+    }
+   ]
+  },
+  {
+   "type": "segment",
+   "name": "5 badge",
+   "roles": [
+    "badge"
+   ],
+   "checks": [
+    {
+     "type": "overshoot",
+     "role": "badge",
+     "key": "w",
+     "over": [
+      0.03,
+      0.3
+     ],
+     "settle": 1.2,
+     "max_cross": 4
+    }
+   ]
+  },
+  {
+   "type": "segment",
+   "name": "6 list",
+   "roles": [
+    "feature-1",
+    "feature-2",
+    "feature-3",
+    "feature-4",
+    "feature-5"
+   ],
+   "checks": [
+    {
+     "type": "stagger",
+     "roles": [
+      "feature-1",
+      "feature-2",
+      "feature-3",
+      "feature-4",
+      "feature-5"
+     ],
+     "key": "x",
+     "gap": [
+      0.03,
+      0.25
+     ],
+     "even": 3
+    }
+   ]
+  },
+  {
+   "type": "segment",
+   "name": "7 reading",
+   "roles": [
+    "read-1",
+    "read-2",
+    "read-3"
+   ],
+   "checks": [
+    {
+     "type": "holds",
+     "roles": [
+      "read-1",
+      "read-2",
+      "read-3"
+     ],
+     "hold": 1.0,
+     "overlap": 0.25,
+     "min_h": 50
+    }
+   ]
+  },
+  {
+   "type": "segment",
+   "name": "8 line",
+   "roles": [
+    "line",
+    "headline"
+   ],
+   "checks": [
+    {
+     "type": "continuity",
+     "line": "line",
+     "headline": "headline",
+     "coral": false,
+     "dot_tol": 140,
+     "max_h": 12,
+     "centre": false
+    }
+   ]
+  },
+  {
+   "type": "segment",
+   "name": "9 travel",
+   "roles": [
+    "world"
+   ],
+   "checks": [
+    {
+     "type": "stations_auto",
+     "world": "world",
+     "labels": [
+      "stop-1",
+      "stop-2",
+      "stop-3"
+     ],
+     "hold": 0.8
+    }
+   ]
+  },
+  {
+   "type": "segment",
+   "name": "10 typing",
+   "roles": [
+    "reply"
+   ],
+   "checks": [
+    {
+     "type": "stream",
+     "reply": "reply",
+     "cursor": "cursor",
+     "rate": 340,
+     "tol": 12,
+     "mono": false
+    }
+   ]
+  },
+  {
+   "type": "segment",
+   "name": "11 counter",
+   "roles": [
+    "count"
+   ],
+   "checks": [
+    {
+     "type": "count",
+     "role": "count",
+     "to": 1284,
+     "min_h": 120
+    }
+   ]
+  },
+  {
+   "type": "curtain"
+  },
+  {
+   "type": "segment",
+   "name": "13 headline",
+   "roles": [
+    "rise-1",
+    "rise-2"
+   ],
+   "checks": [
+    {
+     "type": "rise",
+     "lines": [
+      "rise-1",
+      "rise-2"
+     ],
+     "accent": "accent",
+     "accent_text": "details.",
+     "min_h": 80,
+     "layout": false,
+     "only_coral": false
+    }
+   ]
+  },
+  {
+   "type": "segment",
+   "name": "14 music",
+   "roles": [
+    "word-1",
+    "word-2",
+    "word-3",
+    "word-4"
+   ],
+   "checks": [
+    {
+     "type": "beats",
+     "roles": [
+      "word-1",
+      "word-2",
+      "word-3",
+      "word-4"
+     ],
+     "bpm": 120,
+     "centre": false
+    }
+   ]
+  },
+  {
+   "type": "segment",
+   "name": "15 end",
+   "roles": [
+    "mark",
+    "wordmark"
+   ],
+   "checks": [
+    {
+     "type": "lockup",
+     "mark": "mark",
+     "wordmark": "wordmark",
+     "choreography": false
+    }
+   ]
+  },
+  {
+   "type": "coral_mark"
+  }
+ ],
+ "shots": [
+  1,
+  5,
+  9,
+  13,
+  17,
+  21,
+  25,
+  29,
+  33,
+  37,
+  41,
+  45,
+  49,
+  53,
+  57,
+  59.9
+ ],
+ "pixels": {
+  "curtain": {
+   "role": "prompt",
+   "b": "#1B202A"
+  },
+  "coral_mark": {
+   "role": "mark"
+  }
+ },
+ "oscillate": [
+  "ball",
+  "badge",
+  "tag"
+ ],
+ "duration_range": [
+  40,
+  90
+ ],
+ "timeout": 3600
+}

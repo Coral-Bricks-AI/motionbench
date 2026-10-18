@@ -1,0 +1,66 @@
+<!doctype html><html><head><meta charset="utf-8"><style>
+@font-face{font-family:"Geist";src:url(assets/fonts/geist-medium.ttf);font-weight:500}
+html,body{margin:0;width:1920px;height:1080px;overflow:hidden;background:#EDEDE8}
+#stage{position:absolute;inset:0;background:#EDEDE8;font-family:"Geist"}
+[data-role=shape]{position:absolute;left:820.0px;top:504.0px;width:280px;height:72px;border-radius:36px;background:#0A0A0A;color:#FFFFFF;display:flex;align-items:center;justify-content:center;font-weight:500;font-size:26px;overflow:hidden}
+[data-role=cursor]{position:absolute;left:0;top:0;width:18px;height:18px;border-radius:50%;background:#0A0A0A;border:3px solid #FFFFFF;box-sizing:border-box}
+</style></head><body><div id="stage"><div data-role="shape"><span id="lbl">Generate</span></div><div data-role="cursor"></div></div>
+<script src="assets/gsap.min.js"></script><script>(function(){
+const S = document.querySelector('[data-role=shape]'), L = document.querySelector('#lbl'), C = document.querySelector('[data-role=cursor]');
+const tl = gsap.timeline({paused:true});
+const geo = (w,h) => ({left:960-w/2, top:540-h/2, width:w, height:h});
+gsap.set(C, {x:1260, y:700});
+const LABELS = ["Generate", "", "\u2713", "Live", "Now playing", "", "", "", "Week \u00b7 Month", "Chart", "frame", "Saved", "Generate"], TIMES = [0.5, 1.5, 2.5, 3.5, 4.5, 5.5, 6.5, 7.5, 8.5, 9.5, 10.5, 11.5];
+tl.eventCallback('onUpdate', () => { let k = 0; for (let i = 0; i < TIMES.length; i++) if (tl.time() >= TIMES[i] + 0.1) k = i + 1; if (L.textContent !== LABELS[k]) L.textContent = LABELS[k]; });
+tl.to(C, {x:1021.0, y:545.4, duration:0.4, ease:'power2.inOut'}, 0.05);
+tl.to(S, {scale:0.96, duration:0.08, ease:'power2.out'}, 0.42).to(S, {scale:1, duration:0.3, ease:'power2.out'}, 0.50);
+tl.to(S, {...geo(72,72), borderRadius:36, duration:0.42, ease:'back.out(0.6)'}, 0.50);
+tl.to(S, {scale:0.97, duration:0.08, ease:'power2.out'}, 0.92).to(S, {scale:1, duration:0.3, ease:'power2.out'}, 1.00);
+tl.to(C, {x:969.0, y:545.4, duration:0.4, ease:'power2.inOut'}, 1.05);
+tl.to(S, {scale:0.96, duration:0.08, ease:'power2.out'}, 1.42).to(S, {scale:1, duration:0.3, ease:'power2.out'}, 1.50);
+tl.to(S, {...geo(96,96), borderRadius:48, duration:0.42, ease:'back.out(0.6)'}, 1.50);
+tl.to(S, {scale:0.97, duration:0.08, ease:'power2.out'}, 1.92).to(S, {scale:1, duration:0.3, ease:'power2.out'}, 2.00);
+tl.to(C, {x:975.0, y:550.2, duration:0.4, ease:'power2.inOut'}, 2.05);
+tl.to(S, {scale:0.96, duration:0.08, ease:'power2.out'}, 2.42).to(S, {scale:1, duration:0.3, ease:'power2.out'}, 2.50);
+tl.to(S, {...geo(360,88), borderRadius:44, duration:0.42, ease:'back.out(0.6)'}, 2.50);
+tl.to(S, {scale:0.97, duration:0.08, ease:'power2.out'}, 2.92).to(S, {scale:1, duration:0.3, ease:'power2.out'}, 3.00);
+tl.to(C, {x:1041.0, y:548.6, duration:0.4, ease:'power2.inOut'}, 3.05);
+tl.to(S, {scale:0.96, duration:0.08, ease:'power2.out'}, 3.42).to(S, {scale:1, duration:0.3, ease:'power2.out'}, 3.50);
+tl.to(S, {...geo(520,120), borderRadius:28, duration:0.42, ease:'back.out(0.6)'}, 3.50);
+tl.to(S, {scale:0.97, duration:0.08, ease:'power2.out'}, 3.92).to(S, {scale:1, duration:0.3, ease:'power2.out'}, 4.00);
+tl.to(C, {x:1081.0, y:555.0, duration:0.4, ease:'power2.inOut'}, 4.05);
+tl.to(S, {scale:0.96, duration:0.08, ease:'power2.out'}, 4.42).to(S, {scale:1, duration:0.3, ease:'power2.out'}, 4.50);
+tl.to(S, {...geo(520,24), borderRadius:12, duration:0.42, ease:'back.out(0.6)'}, 4.50);
+tl.to(S, {scale:0.97, duration:0.08, ease:'power2.out'}, 4.92).to(S, {scale:1, duration:0.3, ease:'power2.out'}, 5.00);
+tl.to(C, {x:1081.0, y:535.8, duration:0.4, ease:'power2.inOut'}, 5.05);
+tl.to(S, {scale:0.96, duration:0.08, ease:'power2.out'}, 5.42).to(S, {scale:1, duration:0.3, ease:'power2.out'}, 5.50);
+tl.to(S, {...geo(420,40), borderRadius:20, duration:0.42, ease:'back.out(0.6)'}, 5.50);
+tl.to(S, {scale:0.97, duration:0.08, ease:'power2.out'}, 5.92).to(S, {scale:1, duration:0.3, ease:'power2.out'}, 6.00);
+tl.to(C, {x:1056.0, y:539.0, duration:0.4, ease:'power2.inOut'}, 6.05);
+tl.to(S, {scale:0.96, duration:0.08, ease:'power2.out'}, 6.42).to(S, {scale:1, duration:0.3, ease:'power2.out'}, 6.50);
+tl.to(S, {...geo(120,64), borderRadius:32, duration:0.42, ease:'back.out(0.6)'}, 6.50);
+tl.to(S, {scale:0.97, duration:0.08, ease:'power2.out'}, 6.92).to(S, {scale:1, duration:0.3, ease:'power2.out'}, 7.00);
+tl.to(C, {x:981.0, y:543.8, duration:0.4, ease:'power2.inOut'}, 7.05);
+tl.to(S, {scale:0.96, duration:0.08, ease:'power2.out'}, 7.42).to(S, {scale:1, duration:0.3, ease:'power2.out'}, 7.50);
+tl.to(S, {...geo(440,64), borderRadius:32, duration:0.42, ease:'back.out(0.6)'}, 7.50);
+tl.to(S, {scale:0.97, duration:0.08, ease:'power2.out'}, 7.92).to(S, {scale:1, duration:0.3, ease:'power2.out'}, 8.00);
+tl.to(C, {x:1061.0, y:543.8, duration:0.4, ease:'power2.inOut'}, 8.05);
+tl.to(S, {scale:0.96, duration:0.08, ease:'power2.out'}, 8.42).to(S, {scale:1, duration:0.3, ease:'power2.out'}, 8.50);
+tl.to(S, {...geo(560,320), borderRadius:24, duration:0.42, ease:'back.out(0.6)'}, 8.50);
+tl.to(S, {scale:0.97, duration:0.08, ease:'power2.out'}, 8.92).to(S, {scale:1, duration:0.3, ease:'power2.out'}, 9.00);
+tl.to(C, {x:1091.0, y:595.0, duration:0.4, ease:'power2.inOut'}, 9.05);
+tl.to(S, {scale:0.96, duration:0.08, ease:'power2.out'}, 9.42).to(S, {scale:1, duration:0.3, ease:'power2.out'}, 9.50);
+tl.to(S, {...geo(640,96), borderRadius:20, duration:0.42, ease:'back.out(0.6)'}, 9.50);
+tl.to(S, {scale:0.97, duration:0.08, ease:'power2.out'}, 9.92).to(S, {scale:1, duration:0.3, ease:'power2.out'}, 10.00);
+tl.to(C, {x:1111.0, y:550.2, duration:0.4, ease:'power2.inOut'}, 10.05);
+tl.to(S, {scale:0.96, duration:0.08, ease:'power2.out'}, 10.42).to(S, {scale:1, duration:0.3, ease:'power2.out'}, 10.50);
+tl.to(S, {...geo(420,80), borderRadius:16, duration:0.42, ease:'back.out(0.6)'}, 10.50);
+tl.to(S, {scale:0.97, duration:0.08, ease:'power2.out'}, 10.92).to(S, {scale:1, duration:0.3, ease:'power2.out'}, 11.00);
+tl.to(C, {x:1056.0, y:547.0, duration:0.4, ease:'power2.inOut'}, 11.05);
+tl.to(S, {scale:0.96, duration:0.08, ease:'power2.out'}, 11.42).to(S, {scale:1, duration:0.3, ease:'power2.out'}, 11.50);
+tl.to(S, {...geo(280,72), borderRadius:36, duration:0.42, ease:'back.out(0.6)'}, 11.50);
+tl.to(S, {scale:0.97, duration:0.08, ease:'power2.out'}, 11.92).to(S, {scale:1, duration:0.3, ease:'power2.out'}, 12.00);
+tl.to(C, {x:1260, y:700, duration:1.2, ease:'power2.inOut'}, 12.45);
+tl.set({}, {}, 14);
+window.__timelines = {main: tl};
+})();</script></body></html>

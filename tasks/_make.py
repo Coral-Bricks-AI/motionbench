@@ -222,6 +222,103 @@ Roles: `line-1`, `line-2` (the moving text of each line, not its mask), `accent`
     dict(type="mask"),
 ], pixels=dict(mask=dict(from_=0.0, to=1.6, lines=["line-1", "line-2"], surface="#F9F9FA")))
 
+
+# ---------------- long pieces ----------------
+LAUNCH_BRIEF = """# A message from the client
+
+Hi! I run CoralBricks, a small company that gives developers fast access to lots of AI models through one API. I've never made a video and honestly know nothing about animation, but I want a launch video for our homepage, about a minute long, that feels alive and expensive, like the ones Apple or Stripe put out. I'd rather it be amazing than quick. Here's what I'm picturing, in this order:
+
+1. A coral ball drops in from the top and bounces on the floor like a real rubber ball until it stops.
+2. Someone flicks a coral puck across the floor to the other side, like in air hockey.
+3. Our little coral dot gets tossed from one side of the screen to the other, like throwing a ball to a friend.
+4. A pricing card slides in from the right with a small coral tag hanging from a pin near its top corner, like a luggage tag. When the card stops, the tag should keep swinging a little, like a real one would.
+5. A round coral badge with a white tick pops up in the middle to say it worked. It should feel really satisfying.
+6. Five things we're proud of come in as a list: "Every model", "One key", "Pay per token", "No setup", "Fast everywhere". I want it smooth, not robotic.
+7. Three short lines, shown one at a time in the middle: "Clear language.", "Useful details.", "One coral accent." People should actually have time to read them.
+8. A small dot appears in the middle, grows into a long line across the screen, and that same line ends up underlining a big title, "One API.", that comes up above it.
+9. Show how a request travels: "Request", then "Route", then "Reply", like we're gliding sideways from one to the next and stopping on each.
+10. A chat answer typing out at our model's real speed, about 340 tokens a second, so people see how fast it is. The answer is in assets/tokens.json, already split into its tokens: use them exactly. Put a little coral cursor at the end while it's typing.
+11. A big counter of how many requests we served today, going up to 1,284.
+12. Then the screen swipes up into a dark terminal that shows: $ curl https://inference.coralbricks.ai/v1/chat/completions
+13. Our big headline: "Clear language." with "Useful details." under it, the word "details." in our coral. I'd like it to slide up into place nicely.
+14. I'll put music under the whole video at 120 BPM, starting on the very first frame. "All models, one API." should come in word by word with the music.
+15. End on our logo (assets/logo-icon.svg) with the name CoralBricks next to it, big in the middle, and hold it.
+
+Our designer's brand guide is in BRAND.md. Thanks!!
+
+---
+
+## Tagging for the review tool (added by motionbench, not part of the client's message)
+
+The piece is one `index.html` as in `CONTRACT.md`, 1920×1080, between 40 and 90 seconds long. Tag these elements with `data-role` (one element each, the one that moves):
+
+| Scene | Roles |
+|---|---|
+| 1 | `ball` |
+| 2 | `puck` |
+| 3 | `toss` (the dot) |
+| 4 | `card`, `tag` |
+| 5 | `badge` |
+| 6 | `feature-1` … `feature-5`, top to bottom |
+| 7 | `read-1`, `read-2`, `read-3` |
+| 8 | `line` (the dot that becomes the line), `headline` |
+| 9 | `world` (whatever slides sideways), `stop-1`, `stop-2`, `stop-3` (the three words) |
+| 10 | `reply` (the text), `cursor` |
+| 11 | `count` (the number's text) |
+| 12 | `prompt` (the terminal line) |
+| 13 | `rise-1`, `rise-2` (the two lines), `accent` (the word "details.") |
+| 14 | `word-1` … `word-4` |
+| 15 | `mark`, `wordmark` |
+
+A scene's elements should be off screen (or invisible) while other scenes play.
+"""
+
+seg = lambda name, roles, checks: dict(type="segment", name=name, roles=roles, checks=checks)
+task("l-launch", "long", "everything, asked for in plain words", 60.0,
+     ["ball", "puck", "toss", "card", "tag", "badge"] + [f"feature-{i}" for i in range(1, 6)] + ["read-1", "read-2", "read-3", "line", "headline", "world", "stop-1", "stop-2", "stop-3", "reply", "cursor", "count", "prompt", "rise-1", "rise-2", "accent"] + [f"word-{i}" for i in range(1, 5)] + ["mark", "wordmark"],
+     LAUNCH_BRIEF, [
+    seg("1 ball", ["ball"], [dict(type="bounce", role="ball", contacts=[3, 12])]),
+    seg("2 puck", ["puck"], [dict(type="struck", role="puck", key="cx")]),  # a hit puck has no wind-up of its own
+    seg("3 toss", ["toss"], [dict(type="arc", role="toss", min_dev=0.12)]),
+    seg("4 card", ["card", "tag"], [dict(type="move", role="card", key="cx", ease_out=0.35, name="card"), dict(type="swing", card="card", tag="tag", amp=[4, 45])]),
+    seg("5 badge", ["badge"], [dict(type="overshoot", role="badge", key="w", over=[0.03, 0.3], settle=1.2, max_cross=4)]),
+    seg("6 list", [f"feature-{i}" for i in range(1, 6)], [dict(type="stagger", roles=[f"feature-{i}" for i in range(1, 6)], key="x", gap=[0.03, 0.25], even=3)]),
+    seg("7 reading", ["read-1", "read-2", "read-3"], [dict(type="holds", roles=["read-1", "read-2", "read-3"], hold=1.0, overlap=0.25, min_h=50)]),
+    seg("8 line", ["line", "headline"], [dict(type="continuity", line="line", headline="headline", coral=False, dot_tol=140, max_h=12, centre=False)]),
+    seg("9 travel", ["world"], [dict(type="stations_auto", world="world", labels=["stop-1", "stop-2", "stop-3"], hold=0.8)]),
+    seg("10 typing", ["reply"], [dict(type="stream", reply="reply", cursor="cursor", rate=340, tol=12, mono=False)]),
+    seg("11 counter", ["count"], [dict(type="count", role="count", to=1284, min_h=120)]),
+    dict(type="curtain"),
+    seg("13 headline", ["rise-1", "rise-2"], [dict(type="rise", lines=["rise-1", "rise-2"], accent="accent", accent_text="details.", min_h=80, layout=False, only_coral=False)]),
+    seg("14 music", [f"word-{i}" for i in range(1, 5)], [dict(type="beats", roles=[f"word-{i}" for i in range(1, 5)], bpm=120, centre=False)]),
+    seg("15 end", ["mark", "wordmark"], [dict(type="lockup", mark="mark", wordmark="wordmark", choreography=False)]),
+    dict(type="coral_mark"),
+], pixels=dict(curtain=dict(role="prompt", b="#1B202A"), coral_mark=dict(role="mark")), oscillate=["ball", "badge", "tag"],
+   shots=[1, 5, 9, 13, 17, 21, 25, 29, 33, 37, 41, 45, 49, 53, 57, 59.9], extra=dict(tokens=TOKENS, long=True))
+
+OD_PROMPT = "Make a 14-second Dribbble-level UI motion piece at 120 BPM, 7 bars, something happening on every beat. One shape, never cut: it morphs from a Generate button into a loader, a check, a dynamic island, a music player with a play/pause morph, a scrubbed progress bar, a volume slider that stretches when dragged past max, a toggle, a liquid tab indicator, a chart that draws itself with a hover tooltip, a ⌘K palette you type into, a toast, and back to the button. A cursor drives every change with real clicks and drags. Light warm-gray canvas, black and white components, one clean UI font (Geist). Springs everywhere, a tiny overshoot at most. The last frame is the first frame, so it loops."
+OD_BRIEF = f"""# The brief
+
+{OD_PROMPT}
+
+---
+
+This is the starter prompt of Open Design's "One-Shape UI Motion" example, used unchanged. Open Design's motion skill is installed at `skills/open-design-hyperframes/` (start with its `SKILL.md`); Geist is in `assets/fonts/`. There is no music file: the beat is the 120 BPM grid from the first frame.
+
+## Tagging for the review tool (added by motionbench)
+
+Deliver `index.html` as in `CONTRACT.md`, 1920×1080, exactly 14 seconds. Tag the one shape `data-role="shape"` and the cursor `data-role="cursor"`.
+"""
+task("l-opendesign", "long", "a real user's brief, with a skill", 14.0, ["shape", "cursor"], OD_BRIEF, [
+    dict(type="one_shape", role="shape", states=10),
+    dict(type="cursor_drives", shape="shape", cursor="cursor"),
+    dict(type="springs", role="shape", max=0.1),
+    dict(type="beat_activity", bpm=120),
+    dict(type="loop"),
+    dict(type="surface_light_warm"),
+], pixels=dict(beats=dict(bpm=120), loop=True, surface=dict(t=[0.2, 7.0, 13.9], points=[[30, 30], [1890, 30], [30, 1050], [1890, 1050]], colour="#EDEDE8")),
+   shots=[0, 1.5, 3, 4.5, 6, 7.5, 9, 10.5, 12, 13.99], extra=dict(od=True))
+
 def fix(d):
     if isinstance(d, dict): return {k.rstrip("_"): fix(v) for k, v in d.items()}
     if isinstance(d, list): return [fix(x) for x in d]
@@ -231,6 +328,13 @@ for id, t in T.items():
     d = os.path.join(HERE, id); os.makedirs(d, exist_ok=True)
     open(os.path.join(d, "brief.md"), "w").write(t.pop("brief"))
     extra = t.pop("extra")
+    if extra.get("long"):
+        t.update(duration_range=[40, 90], timeout=3600)
+    if extra.get("od"):
+        t.update(timeout=3600, brand=False, fonts=["Geist"], palette="neutral",
+                 prompt=("Read BRIEF.md and CONTRACT.md in this folder. A motion skill is installed at skills/open-design-hyperframes/: "
+                         "use it. Then make index.html as the brief asks. Check your work with the tools described in CONTRACT.md. "
+                         "When index.html is finished, stop."))
     if "tokens" in extra:
         json.dump(extra["tokens"], open(os.path.join(d, "tokens.json"), "w"), indent=0)
     json.dump(fix(t), open(os.path.join(d, "task.json"), "w"), indent=1)

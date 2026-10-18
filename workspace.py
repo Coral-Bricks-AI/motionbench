@@ -6,7 +6,11 @@ KIT = os.path.join(ROOT, "kit")
 
 def make_workspace(task_id, ws):
     os.makedirs(ws, exist_ok=True)
+    import json
+    task = json.load(open(os.path.join(ROOT, "tasks", task_id, "task.json")))
     for f in ("CONTRACT.md", "BRAND.md"):
+        if f == "BRAND.md" and task.get("brand") is False:
+            continue  # the brief brings its own art direction
         shutil.copy(os.path.join(KIT, f), os.path.join(ws, f))
     shutil.copy(os.path.join(ROOT, "tasks", task_id, "brief.md"), os.path.join(ws, "BRIEF.md"))
     shutil.copytree(os.path.join(KIT, "assets"), os.path.join(ws, "assets"), dirs_exist_ok=True)
@@ -16,6 +20,9 @@ def make_workspace(task_id, ws):
     tokens = os.path.join(ROOT, "tasks", task_id, "tokens.json")
     if os.path.exists(tokens):
         shutil.copy(tokens, os.path.join(ws, "assets", "tokens.json"))
+    extra = os.path.join(ROOT, "tasks", task_id, "ws")
+    if os.path.isdir(extra):  # task-specific files: a skill, its fonts
+        shutil.copytree(extra, ws, dirs_exist_ok=True)
     os.makedirs(os.path.join(ws, "tools"), exist_ok=True)
     for f in ("lib.mjs", "probe.mjs", "snap.mjs"):
         shutil.copy(os.path.join(KIT, "tools", f), os.path.join(ws, "tools", f))

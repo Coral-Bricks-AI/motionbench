@@ -1,0 +1,90 @@
+{
+ "id": "l-opendesign",
+ "track": "long",
+ "principle": "a real user's brief, with a skill",
+ "duration": 14.0,
+ "fps": 60,
+ "roles": [
+  "shape",
+  "cursor"
+ ],
+ "checks": [
+  {
+   "type": "one_shape",
+   "role": "shape",
+   "states": 10
+  },
+  {
+   "type": "cursor_drives",
+   "shape": "shape",
+   "cursor": "cursor"
+  },
+  {
+   "type": "springs",
+   "role": "shape",
+   "max": 0.1
+  },
+  {
+   "type": "beat_activity",
+   "bpm": 120
+  },
+  {
+   "type": "loop"
+  },
+  {
+   "type": "surface_light_warm"
+  }
+ ],
+ "shots": [
+  0,
+  1.5,
+  3,
+  4.5,
+  6,
+  7.5,
+  9,
+  10.5,
+  12,
+  13.99
+ ],
+ "pixels": {
+  "beats": {
+   "bpm": 120
+  },
+  "loop": true,
+  "surface": {
+   "t": [
+    0.2,
+    7.0,
+    13.9
+   ],
+   "points": [
+    [
+     30,
+     30
+    ],
+    [
+     1890,
+     30
+    ],
+    [
+     30,
+     1050
+    ],
+    [
+     1890,
+     1050
+    ]
+   ],
+   "colour": "#EDEDE8"
+  }
+ },
+ "oscillate": [],
+ "timeout": 3600,
+ "brand": false,
+ "fonts": [
+  "Geist"
+ ],
+ "palette": "neutral",
+ "prompt": "Read BRIEF.md and CONTRACT.md in this folder. A motion skill is installed at skills/open-design-hyperframes/: use it. Then make index.html as the brief asks. Check your work with the tools described in CONTRACT.md. When index.html is finished, stop."
+}

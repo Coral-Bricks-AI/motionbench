@@ -1,0 +1,147 @@
+<!doctype html><html><head><meta charset="utf-8"><style>
+@font-face{font-family:"Open Sauce Two";src:url(assets/fonts/OpenSauceTwo-Regular.ttf);font-weight:400}
+@font-face{font-family:"Open Sauce Two";src:url(assets/fonts/OpenSauceTwo-SemiBold.ttf);font-weight:600}
+@font-face{font-family:"Open Sauce Two";src:url(assets/fonts/OpenSauceTwo-Bold.ttf);font-weight:700}
+@font-face{font-family:"JetBrains Mono";src:url(assets/fonts/JetBrainsMono-Regular.woff2);font-weight:400}
+html,body{margin:0;width:1920px;height:1080px;overflow:hidden;background:#F9F9FA}
+#stage{position:absolute;inset:0;width:1920px;height:1080px;overflow:hidden;background:#F9F9FA;font-family:"Open Sauce Two";color:#0A0C11}
+.abs{position:absolute}
+.card{background:#FDFDFD;border:2px solid #DDDFE4;border-radius:24px;box-sizing:border-box}
+.h{font-size:104px;font-weight:600;letter-spacing:-0.025em;white-space:nowrap}
+
+.scene{position:absolute;inset:0;width:1920px;height:1080px;overflow:hidden;visibility:hidden}
+
+</style></head><body><div id="stage"><div class="scene" id="sc0" style="background:#F9F9FA"><div class="abs" data-x="floor" style="left:0;top:879px;width:1920px;height:2px;background:#DDDFE4"></div><div class="abs" data-role="ball" style="left:890px;top:740px;width:140px;height:140px;border-radius:50%;background:#D44027;transform-origin:50% 100%"></div></div><div class="scene" id="sc1" style="background:#F9F9FA"><div class="abs" data-x="floor" style="left:0;top:759px;width:1920px;height:2px;background:#DDDFE4"></div><div class="abs" data-role="puck" style="left:300px;top:640px;width:120px;height:120px;border-radius:50%;background:#D44027"></div></div><div class="scene" id="sc2" style="background:#F9F9FA"><div class="abs" data-role="toss" style="left:260px;top:780px;width:80px;height:80px;border-radius:50%;background:#D44027"></div></div><div class="scene" id="sc3" style="background:#F9F9FA"><div class="abs card" data-role="card" style="left:700px;top:380px;width:520px;height:320px"><div class="abs" data-role="tag" style="left:24px;top:-24px;width:90px;height:130px;background:#D44027;border-radius:12px;transform-origin:45px 18px"><div class="abs" style="left:37px;top:10px;width:16px;height:16px;border-radius:50%;background:#FDFDFD"></div></div></div></div><div class="scene" id="sc4" style="background:#F9F9FA"><div class="abs" data-role="badge" style="left:850px;top:430px;width:220px;height:220px;border-radius:50%;background:#D44027;transform:scale(0)"><svg viewBox="0 0 220 220" width="220" height="220"><path d="M66 112 L98 144 L156 82" fill="none" stroke="#FDFDFD" stroke-width="18" stroke-linecap="round" stroke-linejoin="round"/></svg></div></div><div class="scene" id="sc5" style="background:#F9F9FA"><div class="abs card" data-role="feature-1" style="left:510px;top:225px;width:900px;height:110px;font-size:36px;line-height:106px;padding-left:40px">Request 1</div><div class="abs card" data-role="feature-2" style="left:510px;top:355px;width:900px;height:110px;font-size:36px;line-height:106px;padding-left:40px">Request 2</div><div class="abs card" data-role="feature-3" style="left:510px;top:485px;width:900px;height:110px;font-size:36px;line-height:106px;padding-left:40px">Request 3</div><div class="abs card" data-role="feature-4" style="left:510px;top:615px;width:900px;height:110px;font-size:36px;line-height:106px;padding-left:40px">Request 4</div><div class="abs card" data-role="feature-5" style="left:510px;top:745px;width:900px;height:110px;font-size:36px;line-height:106px;padding-left:40px">Request 5</div></div><div class="scene" id="sc6" style="background:#F9F9FA"><div class="abs" style="left:0;width:1920px;top:478px;text-align:center"><span class="h" data-role="read-1" style="display:inread-block;opacity:0">Clear language.</span></div><div class="abs" style="left:0;width:1920px;top:478px;text-align:center"><span class="h" data-role="read-2" style="display:inread-block;opacity:0">Useful details.</span></div><div class="abs" style="left:0;width:1920px;top:478px;text-align:center"><span class="h" data-role="read-3" style="display:inread-block;opacity:0">One coral accent.</span></div></div><div class="scene" id="sc7" style="background:#F9F9FA"><div class="abs" data-role="line" style="left:952px;top:532px;width:16px;height:16px;border-radius:8px;background:#D44027;transform:scale(0)"></div><div class="abs" style="left:0;width:1920px;top:452px;text-align:center"><span class="h" data-role="headline" style="display:inline-block;opacity:0">One API.</span></div></div><div class="scene" id="sc8" style="background:#F9F9FA"><div class="abs" data-role="world" style="left:0;top:0;width:5760px;height:1080px;background:#F9F9FA"><div class="abs" style="left:0px;top:0;width:1920px;height:1080px;display:flex;align-items:center;justify-content:center"><span class="h" data-role="stop-1">Request</span></div><div class="abs" style="left:1920px;top:0;width:1920px;height:1080px;display:flex;align-items:center;justify-content:center"><span class="h" data-role="stop-2">Route</span></div><div class="abs" style="left:3840px;top:0;width:1920px;height:1080px;display:flex;align-items:center;justify-content:center"><span class="h" data-role="stop-3">Reply</span></div></div></div><div class="scene" id="sc9" style="background:#1B202A"><pre class="abs" style="left:120px;top:96px;width:1680px;margin:0;font-family:'JetBrains Mono';font-size:30px;line-height:44px;color:#FDFDFD;white-space:pre-wrap"><span data-role="reply"></span><span data-role="cursor" style="display:inline-block;width:16px;height:34px;vertical-align:-6px;background:#D44027"></span></pre></div><div class="scene" id="sc10" style="background:#F9F9FA"><div class="abs" style="left:0;top:330px;width:1920px;text-align:center"><div data-role="count" style="display:inline-block;font-family:'JetBrains Mono';font-size:220px;line-height:1;color:#BB3822">0</div><div style="font-size:36px;color:#5B616D;margin-top:24px">requests today</div></div></div><div class="scene" id="sc11" style="background:#F9F9FA"><div class="abs" style="inset:0;background:#F9F9FA;display:flex;align-items:center;justify-content:center"><span class="h">One API.</span></div><div class="abs" id="b" style="inset:0;background:#1B202A"><div class="abs" data-role="prompt" style="left:120px;top:516px;font-family:'JetBrains Mono';font-size:32px;color:#FDFDFD;white-space:nowrap">$ curl https://inference.coralbricks.ai/v1/chat/completions</div></div></div><div class="scene" id="sc12" style="background:#F9F9FA"><div class="abs" style="left:120px;top:300px;height:125px;overflow:hidden"><span class="h" data-role="rise-1" style="display:inline-block;line-height:125px">Clear language.</span></div><div class="abs" style="left:120px;top:425px;height:125px;overflow:hidden"><span class="h" data-role="rise-2" style="display:inline-block;line-height:125px">Useful <span data-role="accent" style="color:#BB3822">details.</span></span></div></div><div class="scene" id="sc13" style="background:#F9F9FA"><div class="abs h" style="left:0;top:478px;width:1920px;display:flex;justify-content:center;gap:28px"><span data-role="word-1" style="display:inline-block;opacity:0">All</span><span data-role="word-2" style="display:inline-block;opacity:0">models,</span><span data-role="word-3" style="display:inline-block;opacity:0">one</span><span data-role="word-4" style="display:inline-block;opacity:0">API.</span></div></div><div class="scene" id="sc14" style="background:#F9F9FA"><div class="abs" style="inset:0;display:flex;align-items:center;justify-content:center;gap:56px"><img data-role="mark" src="assets/logo-icon.svg" style="height:260px;width:auto;transform:scale(0)"><span data-role="wordmark" style="font-weight:700;font-size:150px;letter-spacing:-0.025em;line-height:1;color:#0A0C11;opacity:0">CoralBricks</span></div></div></div>
+<script src="assets/gsap.min.js"></script>
+<script>(function(){
+const MAIN = gsap.timeline({paused:true});
+(function(){ const tl = gsap.timeline();
+
+const b = "[data-role=ball]";
+gsap.set(b, {y:-620, transformOrigin:"50% 100%"});
+let t = 0.3; const H = [620, 300, 140, 60];
+const fall = (h) => 0.45 * Math.sqrt(h / 620);
+for (let k = 0; k < H.length; k++) {
+  const d = fall(H[k]);
+  if (k > 0) { tl.to(b, {y:-H[k], duration:d, ease:"power2.out"}, t); t += d; }
+  tl.to(b, {y:0, duration:d, ease:"power2.in"}, t);
+  tl.to(b, {scaleY:1 + 0.12 * H[k] / 620, scaleX:1 / (1 + 0.12 * H[k] / 620), duration:d * 0.35, ease:"sine.in"}, t + d * 0.65);
+  t += d;
+  const s = 0.2 * Math.sqrt(H[k] / 620) + 0.05;
+  tl.to(b, {scaleY:1 - s, scaleX:1 / (1 - s), duration:0.04, ease:"power2.out"}, t);
+  tl.to(b, {scaleY:1, scaleX:1, duration:0.06, ease:"power2.inOut"}, t + 0.04);
+  t += 0.06;
+}
+
+MAIN.add(tl, 0.0);
+MAIN.set("#sc0", {autoAlpha:1}, 0.0);
+MAIN.set("#sc0", {autoAlpha:0}, 4.0);
+})();
+(function(){ const tl = gsap.timeline();
+tl.to("[data-role=puck]",{x:-40,duration:0.35,ease:"power2.inOut"},0.6).to("[data-role=puck]",{x:1200,duration:0.9,ease:"power3.out"},0.95);
+MAIN.add(tl, 4.0);
+MAIN.set("#sc1", {autoAlpha:1}, 4.0);
+MAIN.set("#sc1", {autoAlpha:0}, 6.5);
+})();
+(function(){ const tl = gsap.timeline();
+const d="[data-role=toss]"; tl.to(d,{x:1320,duration:1.3,ease:"power1.inOut"},0.4).to(d,{y:-420,duration:0.65,ease:"power2.out"},0.4).to(d,{y:0,duration:0.65,ease:"power2.in"},1.05);
+MAIN.add(tl, 6.5);
+MAIN.set("#sc2", {autoAlpha:1}, 6.5);
+MAIN.set("#sc2", {autoAlpha:0}, 9.0);
+})();
+(function(){ const tl = gsap.timeline();
+tl.from("[data-role=card]",{x:1300,duration:1.0,ease:"power3.out"},0.2);
+const g="[data-role=tag]";
+tl.to(g,{rotation:9,duration:0.55,ease:"sine.inOut"},0.45).to(g,{rotation:16,duration:0.3,ease:"sine.out"})
+  .to(g,{rotation:-8,duration:0.4,ease:"sine.inOut"}).to(g,{rotation:4,duration:0.35,ease:"sine.inOut"})
+  .to(g,{rotation:-1.5,duration:0.3,ease:"sine.inOut"}).to(g,{rotation:0,duration:0.3,ease:"sine.inOut"});
+MAIN.add(tl, 9.0);
+MAIN.set("#sc3", {autoAlpha:1}, 9.0);
+MAIN.set("#sc3", {autoAlpha:0}, 12.0);
+})();
+(function(){ const tl = gsap.timeline();
+tl.fromTo("[data-role=badge]",{scale:0},{scale:1,duration:0.8,ease:"back.out(2.2)"},0.4);
+MAIN.add(tl, 12.0);
+MAIN.set("#sc4", {autoAlpha:1}, 12.0);
+MAIN.set("#sc4", {autoAlpha:0}, 14.0);
+})();
+(function(){ const tl = gsap.timeline();
+tl.from("[data-role^=feature]",{x:-700,opacity:0,duration:0.7,ease:"power3.out",stagger:0.09},0.4);
+MAIN.add(tl, 14.0);
+MAIN.set("#sc5", {autoAlpha:1}, 14.0);
+MAIN.set("#sc5", {autoAlpha:0}, 16.6);
+})();
+(function(){ const tl = gsap.timeline();
+const L=[1,2,3].map(i=>`[data-role=read-${i}]`);
+tl.fromTo(L[0],{opacity:0,y:24},{opacity:1,y:0,duration:0.4,ease:"power2.out"},0.2).to(L[0],{opacity:0,duration:0.3},1.8)
+  .fromTo(L[1],{opacity:0,y:24},{opacity:1,y:0,duration:0.4,ease:"power2.out"},2.1).to(L[1],{opacity:0,duration:0.3},3.7)
+  .fromTo(L[2],{opacity:0,y:24},{opacity:1,y:0,duration:0.4,ease:"power2.out"},4.0);
+MAIN.add(tl, 16.6);
+MAIN.set("#sc6", {autoAlpha:1}, 16.6);
+MAIN.set("#sc6", {autoAlpha:0}, 22.6);
+})();
+(function(){ const tl = gsap.timeline();
+const l="[data-role=line]", h="[data-role=headline]";
+tl.to(l,{scale:1,duration:0.35,ease:"back.out(2)"},0.2)
+  .to(l,{left:120,width:1680,top:539,height:2,borderRadius:1,duration:0.7,ease:"power3.inOut"},0.75)
+  .to(l,{top:619,left:700,width:520,duration:0.8,ease:"power3.inOut"},1.6)
+  .fromTo(h,{y:60,opacity:0},{y:0,opacity:1,duration:0.7,ease:"power3.out"},1.85);
+MAIN.add(tl, 22.6);
+MAIN.set("#sc7", {autoAlpha:1}, 22.6);
+MAIN.set("#sc7", {autoAlpha:0}, 26.6);
+})();
+(function(){ const tl = gsap.timeline();
+const w="[data-role=world]"; tl.to(w,{x:-1920,duration:1.2,ease:"expo.inOut"},1.2).to(w,{x:-3840,duration:1.2,ease:"expo.inOut"},3.6);
+MAIN.add(tl, 26.6);
+MAIN.set("#sc8", {autoAlpha:1}, 26.6);
+MAIN.set("#sc8", {autoAlpha:0}, 32.6);
+})();
+(function(){ const tl = gsap.timeline();
+const T=["Here", " is", " the", " requ", "est", " that", " the", " gate", "way", " rece", "ived", ",", " and", " what", " it", " did", " with", " it", ".", "\n", "\n", "POST", " /", "v", "1", "/", "chat", "/", "comp", "leti", "ons", "\n", "model", ":", " deep", "seek", "-", "v", "4", ".", "1", "-", "flash", "-", "fast", "\n", "max", "_", "tokens", ":", " 1024", "\n", "stream", ":", " true", "\n", "\n", "The", " requ", "est", " was", " routed", " to", " the", " near", "est", " repl", "ica", " with", " a", " warm", " cache", " for", " this", " prefix", ",", " so", " the", " first", " token", " came", " back", " in", " 180", " mill", "isec", "onds", ".", " Every", " token", " after", " that", " stre", "amed", " at", " the", " model", "'", "s", " own", " pace", ",", " about", " 340", " tokens", " per", " second", ",", " which", " is", " faster", " than", " anyone", " can", " comf", "orta", "bly", " read", ".", " Reas", "onin", "g", " was", " not", " requ", "este", "d", ",", " so", " none", " was", " gene", "rate", "d", ".", " The", " reply", " stop", "ped", " on", " its", " own", ",", " with", " finish", "_", "reason", " set", " to", " stop", ",", " after", " 412", " output", " tokens", ".", "\n", "\n", "Usage", ":", " 1", ",", "208", " input", " tokens", " (", "1", ",", "024", " from", " cache", ")", ",", " 412", " output", " tokens", ".", " Noth", "ing", " was", " stored", " after", " the", " resp", "onse", " was", " sent", ",", " and", " the", " same", " requ", "est", " sent", " again", " would", " be", " routed", " the", " same", " way", ".", " If", " you", " want", " the", " requ", "est", " to", " be", " retr", "ied", " on", " a", " diff", "eren", "t", " repl", "ica", " when", " one", " is", " slow", ",", " set", " a", " time", "out", " and", " let", " the", " client", " retry", ";", " the", " gate", "way", " will", " not", " hold", " a", " requ", "est", " longer", " than", " you", " ask", " it", " to", "."];
+const r=document.querySelector("[data-role=reply]"), c=document.querySelector("[data-role=cursor]");
+const p={k:0};
+const draw=()=>{ r.textContent=T.slice(0,Math.floor(p.k+1e-6)).join(""); };
+draw();
+tl.to(p,{k:T.length,duration:T.length/340,ease:"none",onUpdate:draw},0.5);
+MAIN.add(tl, 32.6);
+MAIN.set("#sc9", {autoAlpha:1}, 32.6);
+MAIN.set("#sc9", {autoAlpha:0}, 36.6);
+})();
+(function(){ const tl = gsap.timeline();
+const v=document.querySelector("[data-role=count]"), p={n:0};
+tl.to(p,{n:1284,duration:1.6,ease:"power3.out",onUpdate:()=>{v.textContent=Math.floor(p.n).toLocaleString("en-US");}},0.4);
+MAIN.add(tl, 36.6);
+MAIN.set("#sc10", {autoAlpha:1}, 36.6);
+MAIN.set("#sc10", {autoAlpha:0}, 39.6);
+})();
+(function(){ const tl = gsap.timeline();
+gsap.set("#b",{y:1080}); tl.to("#b",{y:0,duration:0.7,ease:"power3.inOut"},1.0);
+MAIN.add(tl, 39.6);
+MAIN.set("#sc11", {autoAlpha:1}, 39.6);
+MAIN.set("#sc11", {autoAlpha:0}, 42.6);
+})();
+(function(){ const tl = gsap.timeline();
+tl.from("[data-role=rise-1]",{y:125,duration:0.8,ease:"power3.out"},0.3).from("[data-role=rise-2]",{y:125,duration:0.8,ease:"power3.out"},0.45);
+MAIN.add(tl, 42.6);
+MAIN.set("#sc12", {autoAlpha:1}, 42.6);
+MAIN.set("#sc12", {autoAlpha:0}, 45.6);
+})();
+(function(){ const tl = gsap.timeline();
+for (let i=0;i<4;i++){ const w=`[data-role=word-${i+1}]`, beat=0.5+i*0.5;
+  tl.fromTo(w,{y:-90,opacity:0},{y:0,duration:0.22,ease:"power2.in"},beat-0.22).to(w,{opacity:1,duration:0.08,ease:"none"},beat-0.22); }
+MAIN.add(tl, 45.5);
+MAIN.set("#sc13", {autoAlpha:1}, 45.5);
+MAIN.set("#sc13", {autoAlpha:0}, 48.5);
+})();
+(function(){ const tl = gsap.timeline();
+tl.to("[data-role=mark]",{scale:1,duration:0.7,ease:"back.out(2)"},0.3)
+  .set("[data-role=wordmark]",{opacity:1},0.85)
+  .fromTo("[data-role=wordmark]",{x:-60,clipPath:"inset(0% 100% 0% 0%)"},{x:0,clipPath:"inset(0% 0% 0% 0%)",duration:0.6,ease:"power3.out",immediateRender:false},0.85);
+MAIN.add(tl, 48.5);
+MAIN.set("#sc14", {autoAlpha:1}, 48.5);
+
+})();
+MAIN.set({}, {}, 52.0);
+window.__timelines = window.__timelines || {};
+window.__timelines.main = MAIN;
+})();</script></body></html>

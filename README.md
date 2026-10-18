@@ -9,22 +9,33 @@ and run records): **[huggingface.co/datasets/coral-bricks-ai/motionbench](https:
 
 ## Results (2026-10-18, 3 attempts per task)
 
-| Model | Harness | Craft (95% CI) | Contract | Perfect runs | Cost/task | Out tokens | Steps | Minutes |
-|---|---|---|---|---|---|---|---|---|
-| Claude Opus 5.5 | Claude Code | **0.987** (0.969–1.000) | 1.000 | 44/48 | $0.277 | 6,198 | 9 | 1.4 |
-| GPT-6.1 Sol | Codex CLI | **0.981** (0.956–1.000) | 1.000 | 42/48 | $0.084 | 2,496 | 8 | 1.2 |
-| DeepSeek V4.1 Flash | Claude Code | **0.968** (0.944–0.989) | 0.996 | 37/48 | $0.044 | 27,748 | 27 | 4.8 |
-| Grok 4.7 | Claude Code | **0.946** (0.907–0.980) | 0.989 | 28/48 | $0.502 | 10,268 | 32 | 7.3 |
-| Claude Sonnet 5.5 | Claude Code | **0.945** (0.906–0.978) | 0.996 | 33/48 | $0.102 | 4,682 | 9 | 0.8 |
-| GLM-5.3 | Claude Code | **0.937** (0.895–0.972) | 0.992 | 30/48 | $0.150 | 16,486 | 16 | 2.0 |
-| Claude Haiku 5.5 | Claude Code | **0.911** (0.863–0.956) | 0.992 | 26/48 | $0.017 | 16,691 | 12 | 1.6 |
-| DeepSeek V4.1 Flash, no reasoning | Claude Code | **0.787** (0.725–0.855) | 0.977 | 15/48 | $0.018 | 8,028 | 34 | 2.7 |
+| Model | Harness | **Score** (95% CI) | Launch film | Open Design | 16 tasks | Cost/task | Out tokens | Steps | Minutes |
+|---|---|---|---|---|---|---|---|---|---|
+| GPT-6.1 Sol | Codex CLI | **0.931** (0.911–0.950) | 0.890 | 0.967 | 0.981 | $0.123 | 5,015 | 10 | 2.0 |
+| GLM-5.3 | Claude Code | **0.919** (0.907–0.929) | 0.862 | 1.000 | 0.939 | $0.240 | 25,164 | 19 | 3.0 |
+| Claude Opus 5.5 | Claude Code | **0.913** (0.883–0.943) | 0.890 | 0.900 | 0.987 | $0.512 | 11,942 | 12 | 2.5 |
+| Grok 4.7 | Claude Code | **0.888** (0.866–0.907) | 0.817 | 0.967 | 0.946 | $0.714 | 12,865 | 41 | 7.7 |
+| Claude Haiku 5.5 | Claude Code | **0.879** (0.850–0.906) | 0.874 | 0.867 | 0.911 | $0.027 | 28,800 | 14 | 2.6 |
+| Claude Sonnet 5.5 | Claude Code | **0.877** (0.856–0.901) | 0.817 | 0.933 | 0.945 | $0.281 | 14,530 | 12 | 2.2 |
+| DeepSeek V4.1 Flash | Claude Code | **0.865** (0.843–0.887) | 0.843 | 0.833 | 0.968 | $0.066 | 41,264 | 36 | 6.8 |
+| DeepSeek V4.1 Flash, no reasoning | Claude Code | **0.830** (0.754–0.886) | 0.785 | 0.933 | 0.790 | $0.037 | 18,345 | 49 | 5.7 |
+
+Score = 50% the launch film (a founder's plain-words brief) + 30% Open Design's one-shape brief + 20% the 16 short tasks, each the share of its motion checks passed (3 attempts). The interval resamples tasks and attempts.
 
 Cost/task = each run's tokens at the provider's list price (CoralBricks standard plan for DeepSeek and GLM), averaged; the Claude and GPT runs actually used subscriptions. Steps = tool calls. Minutes = wall time in the harness.
 
 Craft = share of each task's own motion checks passed, averaged over tasks; 95% bootstrap interval over tasks. Contract = the shared format, determinism and brand checks.
 
 ## What it tests
+
+**Two long briefs** (80% of the score):
+
+| Task | Weight | What it is |
+|---|---|---|
+| `l-launch` | 50% | A founder who knows nothing about animation asks, in plain words, for a one-minute launch film: a ball that bounces "like a real rubber ball", a puck flicked "like in air hockey", a dot "tossed to a friend", a card whose luggage tag "keeps swinging", a list that comes in "smooth, not robotic", typing "at our model's real speed", a counter, a swipe to a terminal, words "with the music", the logo. No technique is named. The grader finds each scene by its tagged elements and applies the short tasks' checks without positions or timings the founder never gave. |
+| `l-opendesign` | 30% | The starter prompt of Open Design's "One-Shape UI Motion" example ([nexu-io/open-design](https://github.com/nexu-io/open-design), Apache-2.0), verbatim, with Open Design's motion skill (`design-templates/hyperframes`) installed in the workspace and its Geist fonts. Checked: one shape on screen throughout and never cut, at least 10 forms, the cursor on the shape when each change begins, a tiny overshoot on at least 85% of changes (the brief's slider stretches on purpose), pixels moving on every beat at 120 BPM, the last frame equal to the first, black/white/warm-gray only, Geist only. |
+
+The sixteen short tasks below make up the other 20%.
 
 **Principles** (eight of the twelve animation principles that can be measured on a 2D frame):
 
@@ -139,6 +150,22 @@ re-graded from its `index.html` (`regrade.py`), so all runs are judged by the sa
 - Jitter: only motion that both opposite edges of an element share counts (layout rounding in a resize
   nudged one edge at a time and was flagged as shake).
 
+After the first long-brief runs (same rule: every run re-graded, the self-test re-run):
+
+- A scene in a film leaves. Its checks now stop at its last stretch of stillness (≥ 0.15 s with one of its
+  elements fully shown) instead of its last visible frame, which had read exit animations as final states.
+- The founder's puck is "flicked… like in air hockey": a struck puck has no wind-up of its own, so it is
+  judged as struck (fast off the hit, gliding to a stop), with a pull-back allowed but not required.
+- Plain words get plain tolerances: "a small dot in the middle" within 140 px of the centre, "a long line" up
+  to 12 px thick and anywhere, the music line not required to be centred, the chat answer not required in
+  mono (the brand sheet keeps mono for code and figures, not long copy).
+- An arc is judged on the flight, from the toss to the first touch back at landing height, so a hop after
+  landing is not counted as a second arc (this applies to `p-arcs` too).
+- Open Design's brief: the canvas must be "a light warm gray" (the exact hex was from Open Design's example,
+  not the prompt), and a dark drop shadow of any tint is allowed (its art direction asks for one).
+- Claude Code's per-reply output cap was raised from 32k to 64k tokens for every model after one GLM run ended
+  on it (a 24k reasoning budget plus a whole page in one write); runs that ended on the cap were run again.
+
 Kept as set, though a reader may disagree: `s-beat` scores when a word visibly *arrives* (within 3% of its
 travel), so an ease-out that ends on the beat lands early. The brief's own words ("arrives (finishes coming
 in) exactly on the beat") lean the other way; most models ended an ease-out on the beat.
@@ -155,5 +182,7 @@ in) exactly on the beat") lean the other way; most models ended an ease-out on t
 
 ## License
 
-MIT (see LICENSE). The fonts in `kit/assets/fonts` are under the SIL Open Font License (texts alongside).
+MIT (see LICENSE). The fonts in `kit/assets/fonts` and `tasks/l-opendesign/ws/assets/fonts` are under the SIL Open
+Font License (texts alongside). `tasks/l-opendesign/ws/skills/open-design-hyperframes/` is Open Design's motion skill,
+unchanged, under Apache-2.0 (its LICENSE and SOURCE.md alongside).
 The CoralBricks mark in `kit/assets/logo-icon.svg` is Coral Bricks AI's and is here only for the lockup task.

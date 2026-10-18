@@ -25,7 +25,7 @@ function readSources(dir) {
   const files = [];
   const walk = (d) => {
     for (const e of fs.readdirSync(d, { withFileTypes: true })) {
-      if (["assets", "tools", "node_modules", "snaps", ".grade", ".claude"].includes(e.name) || e.name.startsWith(".")) continue;
+      if (["assets", "tools", "node_modules", "snaps", "skills", ".grade", ".claude"].includes(e.name) || e.name.startsWith(".")) continue;
       const p = path.join(d, e.name);
       if (e.isDirectory()) walk(p);
       else if (/\.(html?|js|mjs|css)$/.test(e.name)) files.push(p);
@@ -59,7 +59,8 @@ function fail(reason) {
 const m = await open(ws);
 if (m.error) fail(m.error);
 
-// 1. Every frame, in order: what each role is doing.
+// 1. Every frame, in order: what each role is doing. A piece with a length range is measured to its own end.
+if (task.duration_range) task.duration = Math.max(1, Math.min(m.duration || 0, task.duration_range[1]));
 const n = Math.round(task.duration * fps);
 const frames = [];
 for (let i = 0; i <= n; i++) {
@@ -85,6 +86,16 @@ const at = (png, x, y) => { const i = (y * png.width + x) * 4; return [png.data[
 const dist = (a, b) => Math.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2]);
 const hexc = (h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16));
 const P = task.pixels || {};
+if (P.curtain && P.curtain.role) {
+  // Where the curtain is: around the moment the next scene's line first shows.
+  const i = frames.findIndex((f) => { const r = f.roles[P.curtain.role]; return r && r.o > 0.5 && r.y < 1080 && r.y + r.h > 0; });
+  if (i >= 0) {
+    const tv = frames[i].t;
+    P.curtain.from = Math.max(0, tv - 1.2); P.curtain.to = Math.min(task.duration - 1e-6, tv + 1.0);
+    const png0 = dec(await m.shot(P.curtain.from));
+    P.curtain.a = "#" + at(png0, 12, 12).map((v) => v.toString(16).padStart(2, "0")).join("");
+  } else P.curtain = null;
+}
 if (P.curtain) {
   const A = hexc(P.curtain.a), B = hexc(P.curtain.b);
   const AB = B.map((v, i) => v - A[i]), ab2 = AB.reduce((s, v) => s + v * v, 0);
@@ -148,6 +159,24 @@ if (P.coral_mark) {
       for (let x = Math.max(0, Math.floor(b.x)); x < Math.min(1920, b.x + b.w); x += 2) { all++; if (dist(at(png, x, y), hexc("#D44027")) <= 12) hit++; }
     px.coral_mark = all ? hit / all : 0;
   }
+}
+
+if (P.beats) {
+  // Something on screen moves at every beat: pixels change across ±3 frames around it.
+  px.beats = [];
+  const period = 60 / P.beats.bpm;
+  for (let tb = period; tb < task.duration - period / 2; tb += period) {
+    const a = shrink(dec(await m.shot(Math.max(0, tb - 3 / fps))), 0.5), b = shrink(dec(await m.shot(Math.min(task.duration - 1e-6, tb + 3 / fps))), 0.5);
+    let ch = 0;
+    for (let k = 0; k < a.data.length; k += 4) if (Math.abs(a.data[k] - b.data[k]) + Math.abs(a.data[k + 1] - b.data[k + 1]) + Math.abs(a.data[k + 2] - b.data[k + 2]) > 24) ch++;
+    px.beats.push({ t: Math.round(tb * 1000) / 1000, changed: ch / (a.data.length / 4), moving: ch / (a.data.length / 4) > 0.0001 });
+  }
+}
+if (P.loop) {
+  const a = shrink(dec(await m.shot(0)), 0.5), b = shrink(dec(await m.shot(task.duration - 1e-6)), 0.5);
+  let ch = 0;
+  for (let k = 0; k < a.data.length; k += 4) if (Math.abs(a.data[k] - b.data[k]) + Math.abs(a.data[k + 1] - b.data[k + 1]) + Math.abs(a.data[k + 2] - b.data[k + 2]) > 24) ch++;
+  px.loop = ch / (a.data.length / 4);
 }
 
 // 4. Determinism: the same times seeked in order, out of order, and straight after a fresh load.

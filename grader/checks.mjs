@@ -37,7 +37,7 @@ export function series(ctx, role, key) {
     }
   });
 }
-const idx = (ctx, t) => Math.max(0, Math.min(ctx.frames.length - 1, Math.round(t * ctx.fps)));
+const idx = (ctx, t) => Math.max(0, Math.min(ctx.frames.length - 1, Math.round((t - ctx.frames[0].t) * ctx.fps)));
 const tAt = (ctx, i) => ctx.frames[i].t;
 const speeds = (v, fps) => v.map((x, i) => (i === 0 || x == null || v[i - 1] == null ? 0 : Math.abs(x - v[i - 1]) * fps));
 const maxOf = (a) => a.reduce((m, x) => (x != null && x > m ? x : m), -Infinity);
@@ -111,7 +111,9 @@ T.move = (ctx, p) => {
 };
 
 T.anticipation = (ctx, p) => {
-  const v = series(ctx, p.role, p.key || "cx"), d = p.dir || 1, fps = ctx.fps;
+  const v0s = series(ctx, p.role, p.key || "cx"), fps = ctx.fps;
+  const v = v0s.map((x, i) => (x == null ? (i ? v0s.slice(0, i).reverse().find((y) => y != null) : v0s.find((y) => y != null)) : x));
+  const d = p.dir || Math.sign(v[v.length - 1] - v[0]) || 1;
   const v0 = v[0], travel = (v[v.length - 1] - v0) * d;
   const rel = v.map((x) => (x - v0) * d);
   const half = rel.findIndex((x) => x > travel / 2);
@@ -130,7 +132,23 @@ T.anticipation = (ctx, p) => {
     res(`anticipation: winds up the other way (≥ max(8px, ${p.min_frac * 100}% of travel), ≤ ${p.max_frac * 100}%)`, depth >= Math.max(8, p.min_frac * travel) && depth <= p.max_frac * travel, depth, [Math.max(8, p.min_frac * travel), p.max_frac * travel]),
     res(`anticipation: wind-up lasts ${p.lead[0]}–${p.lead[1]}s`, lead >= p.lead[0] && lead <= p.lead[1], lead, p.lead),
     res(`anticipation: wind-up slower than the release (< ${p.speed_ratio} of its peak)`, mainPeak > 0 && windPeak < p.speed_ratio * mainPeak, mainPeak ? windPeak / mainPeak : null, `< ${p.speed_ratio}`),
-    res(`anticipation: released at ${p.release[0]}–${p.release[1]}s`, cross >= 0 && tAt(ctx, cross) >= p.release[0] && tAt(ctx, cross) <= p.release[1], cross >= 0 ? tAt(ctx, cross) : null, p.release),
+    ...(p.release ? [res(`anticipation: released at ${p.release[0]}–${p.release[1]}s`, cross >= 0 && tAt(ctx, cross) >= p.release[0] && tAt(ctx, cross) <= p.release[1], cross >= 0 ? tAt(ctx, cross) : null, p.release)] : []),
+  ];
+};
+
+T.struck = (ctx, p) => {
+  const v = series(ctx, p.role, p.key || "cx"), fps = ctx.fps;
+  const all = moveSpan(v, 1);
+  if (!all) return [res(`${p.role}: moves`, false, null, "moves")];
+  // The forward move starts from the back-most point before it (a pull-back is allowed, not needed).
+  const d = Math.sign(v[all.e] - v[all.s]) || 1;
+  let back = all.s;
+  for (let i = all.s; i <= all.e; i++) { if ((v[i] - v[all.s]) * d > 0.5 * Math.abs(v[all.e] - v[all.s])) break; if ((v[i] - v[back]) * d < 0) back = i; }
+  const span = { s: back, e: all.e };
+  const e = easeRatios(v, span, fps, 0.1);
+  return [
+    res(`${p.role}: leaves fast, like it was hit (speed in the first 10% ≥ 50% of peak)`, e && e.inR >= 0.5, e && e.inR, "≥ 0.5"),
+    res(`${p.role}: glides to a stop (end speed < 35% of peak)`, e && e.outR < 0.35, e && e.outR, "< 0.35"),
   ];
 };
 
@@ -163,11 +181,11 @@ T.overshoot = (ctx, p) => {
 T.stagger = (ctx, p) => {
   const key = p.key || "x";
   const rows = p.roles.map((role) => {
-    const v = series(ctx, role, key), o = series(ctx, role, "o");
+    const v = series(ctx, role, key), v2 = series(ctx, role, key === "x" ? "y" : "x"), o = series(ctx, role, "o");
     const s = firstVisible(ctx, role);
-    const fv = v[v.length - 1], fo = o[o.length - 1];
+    const fv = v[v.length - 1], f2 = v2[v2.length - 1], fo = o[o.length - 1];
     let e = v.length - 1;
-    for (let i = v.length - 1; i >= 0; i--) { if (v[i] == null || Math.abs(v[i] - fv) > 0.5 || Math.abs(o[i] - fo) > 0.01) { e = i + 1; break; } if (i === 0) e = 0; }
+    for (let i = v.length - 1; i >= 0; i--) { if (v[i] == null || Math.abs(v[i] - fv) > 0.5 || Math.abs(v2[i] - f2) > 0.5 || Math.abs(o[i] - fo) > 0.01) { e = i + 1; break; } if (i === 0) e = 0; }
     return { s: s < 0 ? null : tAt(ctx, s), e: tAt(ctx, Math.min(e, v.length - 1)), f: final(ctx, role) };
   });
   if (rows.some((r) => r.s == null || !r.f)) return [res("cascade: every item appears", false, rows.map((r) => r.s), "all")];
@@ -184,14 +202,16 @@ T.stagger = (ctx, p) => {
     res(`cascade: ${p.gap[0]}–${p.gap[1]}s between starts`, ordered && inRange, gaps, p.gap),
     res(`cascade: an even rhythm (longest gap ≤ ${p.even}× shortest)`, ordered && even <= p.even, even, `≤ ${p.even}`),
     res("cascade: each item starts before the one above has settled (overlap)", overlap, rows.map((r) => [r.s, r.e]), "next start < previous settle"),
-    res(`cascade: all settled by ${p.by}s`, done <= p.by, done, `≤ ${p.by}`),
+    ...(p.by != null ? [res(`cascade: all settled by ${p.by}s`, done <= p.by, done, `≤ ${p.by}`)] : []),
     res("cascade: final rows aligned and evenly spaced", maxOf(xs) - minOf(xs) <= 1 && steps.every((s) => s > 0) && maxOf(steps) - minOf(steps) <= 2, { xs, steps }, "same left edge, equal steps"),
   ];
 };
 
 T.bounce = (ctx, p) => {
-  const F = p.floor, fps = ctx.fps;
+  const fps = ctx.fps;
   const w = series(ctx, p.role, "w"), h = series(ctx, p.role, "h"), b = series(ctx, p.role, "b");
+  // Without a stated floor, the floor is where the ball comes to rest.
+  const F = p.floor != null ? p.floor : b[b.length - 1];
   const wr = w[w.length - 1], hr = h[h.length - 1];
   const air = b.map((x) => F - x);
   const groups = [];
@@ -242,7 +262,9 @@ T.bounce = (ctx, p) => {
     res("squash and stretch keep the volume (area within ±20%)", vol.length && minOf(vol) >= 0.8 && maxOf(vol) <= 1.2, [minOf(vol), maxOf(vol)], [0.8, 1.2]),
     res("timing: accelerates as it falls (start speed < 40% of impact speed)", grav != null && grav < 0.4, grav, "< 0.4"),
     res("timing: slows into the top of the bounce (< 35% of take-off speed)", apexSlow != null && apexSlow < 0.35, apexSlow, "< 0.35"),
-    res(`bounce: at rest on the floor by ${p.rest}s`, restAt <= p.rest && Math.abs(b[b.length - 1] - F) <= 1 && Math.abs(h[h.length - 1] / hr - 1) < 0.01, restAt, `≤ ${p.rest}`),
+    p.rest != null
+      ? res(`bounce: at rest on the floor by ${p.rest}s`, restAt <= p.rest && Math.abs(b[b.length - 1] - F) <= 1 && Math.abs(h[h.length - 1] / hr - 1) < 0.01, restAt, `≤ ${p.rest}`)
+      : res("bounce: comes to rest on the floor (still for its last 0.3s)", still(b, b.length - 1 - Math.round(0.3 * fps), b.length - 1) && Math.abs(h[h.length - 1] / hr - 1) < 0.01, restAt, "still"),
   ];
 };
 
@@ -250,8 +272,14 @@ T.arc = (ctx, p) => {
   const x = series(ctx, p.role, "cx"), y = series(ctx, p.role, "cy"), fps = ctx.fps;
   const sx = moveSpan(x, 1), sy = moveSpan(y, 1);
   if (!sx) return [res("arc: moves", false, null, "moves")];
-  const s = Math.min(sx.s, sy ? sy.s : sx.s), e = Math.max(sx.e, sy ? sy.e : sx.e);
-  const [x0, y0, x1, y1] = [x[s], y[s], x[e], y[e]];
+  const s = Math.min(sx.s, sy ? sy.s : sx.s);
+  let e = Math.max(sx.e, sy ? sy.e : sx.e);
+  // The flight ends when the object first comes back down to its landing height after the top.
+  const yEnd = y[e];
+  let top = s;
+  for (let i = s; i <= e; i++) if (y[i] < y[top]) top = i;
+  for (let i = top; i <= e; i++) if (y[i] >= yEnd - 2) { e = Math.max(i, s + 2); break; }
+  const [x0, y0, x1, y1] = [x[s], y[s], x[e], y[e]];  // chord of the flight
   const L = Math.hypot(x1 - x0, y1 - y0), nx = -(y1 - y0) / L, ny = (x1 - x0) / L;
   let dev = 0, apex = s;
   for (let i = s; i <= e; i++) {
@@ -286,7 +314,7 @@ T.arc = (ctx, p) => {
     res("arc: top of the arc near the middle (25–75% of the way)", apexFrac >= 0.25 && apexFrac <= 0.75, apexFrac, [0.25, 0.75]),
     res("arc: slows into the top (vertical speed < 30% of max)", apexSlow < 0.3, apexSlow, "< 0.3"),
     res("arc: no corners in the path (turn ≤ 20° per frame)", kink <= 20, kink, "≤ 20°"),
-    res(`arc: lands by ${p.land}s`, land <= p.land, land, `≤ ${p.land}`),
+    ...(p.land != null ? [res(`arc: lands by ${p.land}s`, land <= p.land, land, `≤ ${p.land}`)] : []),
   ];
 };
 
@@ -324,7 +352,7 @@ T.swing = (ctx, p) => {
     res(`secondary: the tag swings ${p.amp[0]}–${p.amp[1]}° after the card's peak speed`, amp >= p.amp[0] && amp <= p.amp[1], amp, p.amp),
     res("secondary: the big swing as it stops is forward, the way the card was travelling", firstBig >= 0 && Math.sign(d[firstBig]) === want, firstBig >= 0 ? Math.sign(d[firstBig]) : 0, want),
     res("secondary: still swinging just after the card stops (follows, not leads)", Math.abs(d[lagI]) > 1, d[lagI], "> 1°"),
-    res(`secondary: dies down by ${p.settle_by}s, each swing after the biggest smaller`, tAt(ctx, Math.min(settle, d.length - 1)) <= p.settle_by && lobes.slice(lobes.indexOf(Math.max(...lobes))).every((l, i, a) => i === 0 || l <= a[i - 1] + 0.3), { settle: tAt(ctx, Math.min(settle, d.length - 1)), lobes: lobes.map(r2) }, `≤ ${p.settle_by}`),
+    res(`secondary: dies down ${p.settle_by != null ? "by " + p.settle_by + "s" : "before the scene ends"}, each swing after the biggest smaller`, tAt(ctx, Math.min(settle, d.length - 1)) <= (p.settle_by != null ? p.settle_by : tAt(ctx, d.length - 1) - 0.1) && lobes.slice(lobes.indexOf(Math.max(...lobes))).every((l, i, a) => i === 0 || l <= a[i - 1] + 0.3), { settle: tAt(ctx, Math.min(settle, d.length - 1)), lobes: lobes.map(r2) }, p.settle_by != null ? `≤ ${p.settle_by}` : "before the end"),
     res("secondary: comes to rest hanging straight (|rot| ≤ 1°)", Math.abs(r0) <= 1, r0, "≤ 1°"),
     res("secondary: the tag stays attached to the card", attached, attached, true),
   ];
@@ -349,12 +377,12 @@ T.holds = (ctx, p) => {
     const n = p.roles.filter((role) => f.roles[role] && f.roles[role].o > 0.15 && visibleAt(f.roles[role])).length;
     both = n > 1 ? both + 1 : 0; worst = Math.max(worst, both);
   });
-  const placed = runs.every((r, k) => r && [r.s, r.e].every((i) => { const x = ctx.frames[i].roles[p.roles[k]]; return Math.abs(x.x + x.w / 2 - 960) <= 40 && inSafe(x) && x.h >= p.min_h; }));
+  const placed = runs.every((r, k) => r && [r.s, r.e].every((i) => { const x = ctx.frames[i].roles[p.roles[k]]; return (p.centre === false || Math.abs(x.x + x.w / 2 - 960) <= 40) && inSafe(x) && x.h >= p.min_h; }));
   return [
     res(`staging: each line held readable and still for ≥ ${p.hold}s`, lens.every((l) => l >= p.hold), lens, `≥ ${p.hold}`),
     res("staging: lines come in order", starts.every((s, i) => i === 0 || s > starts[i - 1]), starts.map((s) => (isFinite(s) ? tAt(ctx, s) : null)), "increasing"),
     res(`staging: never two lines competing (overlap ≤ ${p.overlap}s)`, worst / fps <= p.overlap, worst / fps, `≤ ${p.overlap}`),
-    res(`staging: each line centred, inside title-safe, at least ${p.min_h}px tall`, placed, placed, true),
+    res(`staging: each line ${p.centre === false ? "" : "centred, "}inside title-safe, at least ${p.min_h}px tall`, placed, placed, true),
   ];
 };
 
@@ -397,17 +425,18 @@ T.continuity = (ctx, p) => {
   const stays = fr.slice(ta).every((f) => f.roles[L] && f.roles[L].o >= 0.9);
   const dotI = fr.findIndex((f, i) => i >= ta && f.roles[L].w >= 6 && f.roles[L].h >= 6);
   const dot = dotI >= 0 ? fr[dotI].roles[L] : null;
-  const isDot = dot && dot.w <= 48 && dot.h <= 48 && dot.w / dot.h >= 0.6 && dot.w / dot.h <= 1.67 && Math.abs(dot.x + dot.w / 2 - 960) <= 20 && Math.abs(dot.y + dot.h / 2 - 540) <= 20;
+  const tol = p.dot_tol ?? 20, maxH = p.max_h ?? 6;
+  const isDot = dot && dot.w <= 48 && dot.h <= 48 && dot.w / dot.h >= 0.6 && dot.w / dot.h <= 1.67 && Math.abs(dot.x + dot.w / 2 - 960) <= tol && Math.abs(dot.y + dot.h / 2 - 540) <= tol;
   let jump = 0;
   for (let i = ta + 1; i < fr.length; i++) {
     const a = fr[i - 1].roles[L], b = fr[i].roles[L];
     if (!a || !b) { jump = Infinity; break; }
     jump = Math.max(jump, Math.abs(a.x - b.x), Math.abs(a.y - b.y), Math.abs(a.x + a.w - b.x - b.w), Math.abs(a.y + a.h - b.y - b.h));
   }
-  const hairI = fr.findIndex((f) => f.roles[L] && f.roles[L].w >= 0.6 * FRAME.W && f.roles[L].h <= 6 && Math.abs(f.roles[L].y + f.roles[L].h / 2 - 540) <= 30);
+  const hairI = fr.findIndex((f) => f.roles[L] && f.roles[L].w >= 0.6 * FRAME.W && f.roles[L].h <= maxH && (p.centre === false || Math.abs(f.roles[L].y + f.roles[L].h / 2 - 540) <= 30));
   const l = final(ctx, L), hd = final(ctx, Hd);
   const gap = l && hd ? l.y - (hd.y + hd.h) : null;
-  const divider = l && hd && l.h <= 6 && l.w >= 200 && gap >= 8 && gap <= 140 && (Math.abs(l.x + l.w / 2 - hd.x - hd.w / 2) <= 24 || Math.abs(l.x - hd.x) <= 12 || (l.x <= hd.x + 12 && l.x + l.w >= hd.x + hd.w - 12)) && l.y + l.h / 2 >= 580;
+  const divider = l && hd && l.h <= maxH && l.w >= 200 && gap >= 8 && gap <= 140 && (Math.abs(l.x + l.w / 2 - hd.x - hd.w / 2) <= 24 || Math.abs(l.x - hd.x) <= 12 || (l.x <= hd.x + 12 && l.x + l.w >= hd.x + hd.w - 12)) && (p.centre === false || l.y + l.h / 2 >= 580);
   // The headline's entrance: when it starts to move, or (if it never moves) when it appears. A masked line
   // counts as "visible" while it waits under its mask, so its motion is the better clock.
   const hcy = series(ctx, Hd, "cy"), ho = series(ctx, Hd, "o");
@@ -424,7 +453,7 @@ T.continuity = (ctx, p) => {
     res("continuity: one element throughout, never faded out", stays, stays, true),
     res("continuity: no cuts (no edge jumps ≥ 400px in a frame)", jump < 400, jump, "< 400"),
     res("continuity: the headline rises into place after the hairline forms", rose && hairI >= 0 && hv >= hairI - Math.round(0.25 * ctx.fps), { rise: hv >= 0 ? maxOf(hcy.slice(hv)) - hFinal : null, at: hv >= 0 ? tAt(ctx, hv) : null }, "rises ≥ 16px, after"),
-    res("continuity: the line is coral", coral, l && colourOf(l), "coral"),
+    ...(p.coral === false ? [] : [res("continuity: the line is coral", coral, l && colourOf(l), "coral")]),
   ];
 };
 
@@ -437,8 +466,11 @@ T.stream = (ctx, p) => {
   toks.forEach((t, k) => { acc += t; map.set(norm(acc), k + 1); });
   const ks = ctx.frames.map((f) => (f.roles[p.reply] ? map.get(norm(f.roles[p.reply].text)) : undefined));
   const valid = ks.filter((k) => k !== undefined).length / ks.length;
+  const firstTok = ks.findIndex((k) => k !== undefined && k >= 1);
+  const start = p.start != null ? p.start : firstTok > 0 ? tAt(ctx, firstTok) - 1 / fps : tAt(ctx, 0);
+  p = { ...p, start };
   const end = p.start + N / p.rate;
-  const before = ctx.frames.every((f, i) => f.t > p.start - 0.02 || ks[i] === 0);
+  const before = ctx.frames.every((f, i) => f.t > p.start - 0.02 || ks[i] === 0 || ks[i] === undefined && f.roles[p.reply] == null);
   const started = ks[idx(ctx, p.start + 0.05)] >= 1;
   const win = ctx.frames.map((f, i) => i).filter((i) => ctx.frames[i].t >= p.start && ctx.frames[i].t <= end);
   const errs = win.map((i) => (ks[i] === undefined ? Infinity : Math.abs(ks[i] - p.rate * (ctx.frames[i].t - p.start))));
@@ -462,7 +494,7 @@ T.stream = (ctx, p) => {
     res("stream: the whole reply is there when it finishes", done, ks[ks.length - 1], N),
     res("stream: a cursor sits at the end of the text while streaming (≥ 90%)", curOk >= 0.9, curOk, "≥ 0.9"),
     res("stream: the cursor is coral", c && colourOf(c).some((x) => CORAL_INK.some((k) => near(x, k))), c && colourOf(c), "coral"),
-    res("stream: set in the mono face", r && /JetBrains Mono/i.test(r.font.split(",")[0]), r && r.font, "JetBrains Mono"),
+    ...(p.mono === false ? [] : [res("stream: set in the mono face", r && /JetBrains Mono/i.test(r.font.split(",")[0]), r && r.font, "JetBrains Mono")]),
   ];
 };
 
@@ -472,11 +504,11 @@ T.count = (ctx, p) => {
   const fmt = v.every((s, i) => o[i] < 0.5 || /^\d{1,3}(,\d{3})*$/.test(s));
   const n = v.map((s) => (s && /^[\d,]+$/.test(s) ? parseInt(s.replace(/,/g, ""), 10) : null));
   const mono = n.every((x, i) => i === 0 || x == null || n[i - 1] == null || x >= n[i - 1]);
-  const before = ctx.frames.every((f, i) => f.t > p.start - 0.02 || n[i] === 0 || o[i] < 0.5);
-  const started = n[idx(ctx, p.start + 0.1)] > 0;
   const land = n.findIndex((x) => x === p.to);
-  const held = land >= 0 && n.slice(land).every((x) => x === p.to);
-  const mid = n[idx(ctx, (p.start + p.land) / 2)];
+  const held = land >= 0 && n.slice(land).every((x) => x === p.to || x == null);
+  const before = p.start == null || ctx.frames.every((f, i) => f.t > p.start - 0.02 || n[i] === 0 || o[i] < 0.5);
+  const started = p.start == null || n[idx(ctx, p.start + 0.1)] > 0;
+  const mid = p.mid != null ? n[idx(ctx, (p.start + p.land) / 2)] : null;
   const byLen = {};
   v.forEach((s, i) => { if (s && o[i] >= 0.5) (byLen[s.length] = byLen[s.length] || []).push(w[i]); });
   const wobble = Math.max(0, ...Object.values(byLen).map((a) => maxOf(a) - minOf(a)));
@@ -484,9 +516,11 @@ T.count = (ctx, p) => {
   return [
     res("count: always a whole number with thousands separators", fmt, fmt, true),
     res("count: never goes backwards", mono, mono, true),
-    res(`count: starts at ${p.start}s`, before && started, { before, started }, true),
-    res(`count: lands on ${p.to.toLocaleString("en")} at ${p.land}s and holds`, land >= 0 && Math.abs(tAt(ctx, land) - p.land) <= 0.05 && held, land >= 0 ? tAt(ctx, land) : null, p.land),
-    res(`count: arrives at the number (≥ ${p.mid * 100}% of it by halfway)`, mid != null && mid >= p.mid * p.to, mid, `≥ ${p.mid * p.to}`),
+    ...(p.start != null ? [res(`count: starts at ${p.start}s`, before && started, { before, started }, true)] : [res("count: starts from 0", n.find((x) => x != null) === 0, n.find((x) => x != null), 0)]),
+    p.land != null
+      ? res(`count: lands on ${p.to.toLocaleString("en")} at ${p.land}s and holds`, land >= 0 && Math.abs(tAt(ctx, land) - p.land) <= 0.05 && held, land >= 0 ? tAt(ctx, land) : null, p.land)
+      : res(`count: reaches ${p.to.toLocaleString("en")} and holds it`, land >= 0 && held && (ctx.frames.length - land) / ctx.fps >= 0.4, land >= 0 ? tAt(ctx, land) : null, p.to),
+    ...(p.mid != null ? [res(`count: arrives at the number (≥ ${p.mid * 100}% of it by halfway)`, mid != null && mid >= p.mid * p.to, mid, `≥ ${p.mid * p.to}`)] : []),
     res("count: digits don't jiggle (tabular: width steady while the digit count holds)", wobble <= 1, wobble, "≤ 1px"),
     res("count: a measurement, so the mono face, at hero size", f && /JetBrains Mono/i.test(f.font.split(",")[0]) && f.h >= p.min_h, f && [f.font, f.h], `JetBrains Mono, h ≥ ${p.min_h}`),
   ];
@@ -506,23 +540,27 @@ T.beats = (ctx, p) => {
     return { L, E };
   });
   const fps = ctx.fps;
-  const beat = (i) => p.beat1 + (i * 60) / p.bpm;
+  const period = 60 / p.bpm;
+  const beat = (i) => (p.beat1 != null ? p.beat1 + i * period : Math.round(tAt(ctx, Math.max(0, lands[i].L)) / period) * period);
   const errs = lands.map((x, i) => (x.L < 0 ? null : tAt(ctx, x.L) - beat(i)));
+  const inOrder = p.beat1 != null || lands.every((x, i) => i === 0 || (x.L >= 0 && lands[i - 1].L >= 0 && beat(i) > beat(i - 1)));
   const fs = p.roles.map((r) => final(ctx, r));
   const oneLine = fs.every((f) => f) && maxOf(fs.map((f) => f.y)) - minOf(fs.map((f) => f.y)) <= 4 && fs.every((f, i) => i === 0 || f.x >= fs[i - 1].x + fs[i - 1].w - 1);
   const ux0 = minOf(fs.map((f) => f?.x)), ux1 = maxOf(fs.map((f) => f && f.x + f.w));
   return [
-    res(`beat: every word lands on its beat (±2 frames)`, errs.every((e) => e != null && Math.abs(e) <= 2 / fps + 1e-3), errs, "±0.033s"),
+    res(`beat: every word lands on ${p.beat1 != null ? "its" : "a"} beat (±2 frames)${p.beat1 != null ? "" : ", one after another"}`, inOrder && errs.every((e) => e != null && Math.abs(e) <= 2 / fps + 1e-3), errs, "±0.033s"),
     res("beat: every word has an entrance (not a cut)", lands.every((x) => x.E >= 0 && (x.L - x.E) / fps >= 0.05), lands.map((x) => (x.E >= 0 ? (x.L - x.E) / fps : null)), "≥ 0.05s"),
     res("beat: the words end as one line, in reading order", oneLine, oneLine, true),
-    res("beat: the line is centred and inside title-safe", oneLine && Math.abs((ux0 + ux1) / 2 - 960) <= 40 && fs.every(inSafe), (ux0 + ux1) / 2, "960 ±40"),
+    p.centre === false
+      ? res("beat: the line is inside title-safe", oneLine && fs.every(inSafe), oneLine, true)
+      : res("beat: the line is centred and inside title-safe", oneLine && Math.abs((ux0 + ux1) / 2 - 960) <= 40 && fs.every(inSafe), (ux0 + ux1) / 2, "960 ±40"),
   ];
 };
 
 T.lockup = (ctx, p) => {
   const m = final(ctx, p.mark), wm = final(ctx, p.wordmark);
   if (!m || !wm) return [res("lockup: mark and wordmark present", false, null, "both")];
-  const i0 = idx(ctx, p.hold_from), i1 = ctx.frames.length - 1;
+  const i1 = ctx.frames.length - 1, i0 = p.hold_from != null ? idx(ctx, p.hold_from) : Math.max(0, i1 - Math.round(1.0 * ctx.fps));
   const held = [p.mark, p.wordmark].every((r) => ["x", "y", "w", "h", "o"].every((k) => still(series(ctx, r, k), i0, i1, k === "o" ? 0.01 : 0.5))) && m.o > 0.98 && wm.o > 0.98;
   const ux0 = Math.min(m.x, wm.x), ux1 = Math.max(m.x + m.w, wm.x + wm.w), uy0 = Math.min(m.y, wm.y), uy1 = Math.max(m.y + m.h, wm.y + wm.h);
   const cx = (ux0 + ux1) / 2, cy = (uy0 + uy1) / 2, uw = ux1 - ux0;
@@ -533,14 +571,15 @@ T.lockup = (ctx, p) => {
   const mw = series(ctx, p.mark, "w"), peak = maxOf(mw.slice(mv >= 0 ? mv : 0)) / m.w;
   const asset = ctx.static.logo;
   return [
-    res(`lockup: holds still and whole from ${p.hold_from}s`, held, held, true),
+    res(`lockup: holds still and whole ${p.hold_from != null ? "from " + p.hold_from + "s" : "for the last second"}`, held, held, true),
     res("lockup: centred in the frame (±6px across, ±10px down)", Math.abs(cx - 960) <= 6 && Math.abs(cy - 540) <= 10, [cx, cy], [960, 540]),
     res("lockup: large (40–85% of the frame's width)", uw >= 0.4 * FRAME.W && uw <= 0.85 * FRAME.W, uw, [768, 1632]),
     res("lockup: the real mark, used as is (asset, proportions)", asset && Math.abs(aspect / (579.22 / 636.72) - 1) <= 0.03, { asset, aspect }, "assets/logo-icon.svg, 0.91"),
     res("lockup: wordmark 'CoralBricks' in Open Sauce Two Bold, ink #0A0C11", wm.text.trim() === "CoralBricks" && /Open Sauce Two/i.test(wm.font.split(",")[0]) && +wm.weight === 700 && ink && near(ink.c, hex("#0A0C11"), 1), [wm.text.trim(), wm.font, wm.weight, wm.color], true),
     res("lockup: mark left of the wordmark, centres aligned, a tidy gap", gap >= 0.08 * m.h && gap <= 0.7 * m.h && Math.abs(m.y + m.h / 2 - (wm.y + wm.h / 2)) <= 0.06 * m.h, { gap, dy: m.y + m.h / 2 - (wm.y + wm.h / 2) }, "gap 8–70% of mark height, |dy| ≤ 6%"),
-    res("lockup: the mark arrives first (≥ 0.1s before the wordmark)", mv >= 0 && wv >= 0 && (wv - mv) / ctx.fps >= 0.1, mv >= 0 && wv >= 0 ? (wv - mv) / ctx.fps : null, "≥ 0.1"),
-    res("lockup: the mark lands with follow-through (overshoot 2–25%)", peak >= 1.02 && peak <= 1.25, peak, [1.02, 1.25]),
+    ...(p.choreography === false ? [] : [
+      res("lockup: the mark arrives first (≥ 0.1s before the wordmark)", mv >= 0 && wv >= 0 && (wv - mv) / ctx.fps >= 0.1, mv >= 0 && wv >= 0 ? (wv - mv) / ctx.fps : null, "≥ 0.1"),
+      res("lockup: the mark lands with follow-through (overshoot 2–25%)", peak >= 1.02 && peak <= 1.25, peak, [1.02, 1.25])]),
   ];
 };
 
@@ -563,15 +602,165 @@ T.rise = (ctx, p) => {
     const noBounce = minOf(y.slice(span.s)) >= f.y - 2 && y.slice(span.s + 1).every((v, i) => v <= y[span.s + i] + 0.5);
     out.push(res(`${role}: rises from below its line (≥ 60% of its height), straight up`, rise >= 0.6 * f.h && noBounce, rise / f.h, "≥ 0.6, no dip"));
     out.push(res(`${role}: eases into place (end speed < 35% of peak)`, e && e.outR < 0.35, e && e.outR, "< 0.35"));
-    out.push(res(`${role}: still from ${p.hold_from}s`, ["x", "y", "w", "h"].every((k) => still(series(ctx, role, k), idx(ctx, p.hold_from), ctx.frames.length - 1)), true, true));
+    const h0 = p.hold_from != null ? idx(ctx, p.hold_from) : ctx.frames.length - 1 - Math.round(0.3 * ctx.fps);
+    out.push(res(`${role}: settles and holds still`, ["x", "y", "w", "h"].every((k) => still(series(ctx, role, k), h0, ctx.frames.length - 1)), true, true));
   }
   const g = starts[1] != null && starts[0] != null ? starts[1] - starts[0] : null;
-  out.push(res(`rise: line 2 follows line 1 by ${p.gap[0]}–${p.gap[1]}s`, g != null && g >= p.gap[0] && g <= p.gap[1], g, p.gap));
+  if (p.gap) out.push(res(`rise: line 2 follows line 1 by ${p.gap[0]}–${p.gap[1]}s`, g != null && g >= p.gap[0] && g <= p.gap[1], g, p.gap));
   const fs = p.lines.map((r) => final(ctx, r));
-  out.push(res("rise: left-aligned on the 120px margin, upper third, headline size, Open Sauce Two", fs.every((f) => f && Math.abs(f.x - 120) <= 8 && f.h >= p.min_h && /Open Sauce Two/i.test(f.font.split(",")[0])) && fs[0].y >= 150 && fs[0].y <= 480, fs.map((f) => f && [f.x, f.y, f.h]), "x 120±8, y₁ 150–480"));
+  if (p.layout !== false) out.push(res("rise: left-aligned on the 120px margin, upper third, headline size, Open Sauce Two", fs.every((f) => f && Math.abs(f.x - 120) <= 8 && f.h >= p.min_h && /Open Sauce Two/i.test(f.font.split(",")[0])) && fs[0].y >= 150 && fs[0].y <= 480, fs.map((f) => f && [f.x, f.y, f.h]), "x 120±8, y₁ 150–480"));
   const a = final(ctx, p.accent);
-  out.push(res("rise: the accent word is coral and the only coral", a && a.text.trim() === p.accent_text && colourOf(a).some((c) => CORAL_INK.some((k) => near(c, k))) && ctx.coralOwners.every((o) => o === p.accent), { text: a && a.text.trim(), owners: ctx.coralOwners }, `'${p.accent_text}' only`));
+  out.push(res("rise: the accent word is coral and the only coral", a && a.text.trim() === p.accent_text && colourOf(a).some((c) => CORAL_INK.some((k) => near(c, k))) && (p.only_coral === false || ctx.coralOwners.every((o) => o === p.accent)), { text: a && a.text.trim(), owners: p.only_coral === false ? undefined : ctx.coralOwners }, `'${p.accent_text}' in coral`));
   return out;
+};
+
+// ---------- scenes of a long piece ----------
+// A scene is the stretch where its roles are on screen; its checks run on just those frames.
+export function sceneSpan(frames, roles, pad = 0.15, fps = 60) {
+  const on = (f) => roles.some((r) => visibleAt(f.roles[r]));
+  const a = frames.findIndex(on);
+  if (a < 0) return null;
+  let b = a;
+  for (let i = frames.length - 1; i >= a; i--) if (on(frames[i])) { b = i; break; }
+  // Pad before the scene (to catch its entrance), not after: once it is gone, its last state is gone too.
+  return [Math.max(0, a - Math.round(pad * fps)), b];
+}
+
+T.segment = (ctx, p) => {
+  const span = sceneSpan(ctx.frames, p.roles, 0.15, ctx.fps);
+  if (!span) return [res(`${p.name}: the scene is there (${p.roles.join(", ")} on screen)`, false, null, "on screen")];
+  // A scene in a film usually leaves. Its resting state is its last stretch of stillness (≥ 0.15s, the first
+  // role fully shown); what follows is the exit, so the scene's checks stop there.
+  let end = span[1];
+  const need = Math.round(0.15 * ctx.fps), still1 = (i) => p.roles.every((r) => {
+    const a = ctx.frames[i - 1].roles[r], b = ctx.frames[i].roles[r];
+    if (!a || !b) return true;
+    return ["x", "y", "w", "h"].every((k) => Math.abs(a[k] - b[k]) <= 0.5);
+  }) && p.roles.some((r) => { const x = ctx.frames[i].roles[r]; return x && x.o >= 0.95 && visibleAt(x); });
+  for (let i = span[1], run = 0; i > span[0]; i--) {
+    run = still1(i) ? run + 1 : 0;
+    if (run >= need) { let j = i + run - 1; while (j + 1 <= span[1] && still1(j + 1)) j++; end = j; break; }
+  }
+  const sub = { ...ctx, frames: ctx.frames.slice(span[0], end + 1) };
+  const out = [];
+  for (const c of p.checks) {
+    let got;
+    try { got = T[c.type](sub, c); } catch (e) { got = [res(`${c.type}: could not be measured`, false, String(e.message || e).slice(0, 120), "measurable")]; }
+    for (const r of got) out.push({ ...r, id: `${p.name} · ${r.id}` });
+  }
+  return out;
+};
+
+T.stations_auto = (ctx, p) => {
+  // A world that travels sideways and stops: count the stops, check the travel between them.
+  const x = series(ctx, p.world, "x"), fps = ctx.fps;
+  const holds = [];
+  let cur = null;
+  for (let i = 1; i < x.length; i++) {
+    const ok = x[i] != null && x[i - 1] != null && Math.abs(x[i] - x[i - 1]) <= 0.25;
+    if (ok) cur = cur ? { s: cur.s, e: i } : { s: i - 1, e: i };
+    else { if (cur && (cur.e - cur.s + 1) / fps >= p.hold) holds.push(cur); cur = null; }
+  }
+  if (cur && (cur.e - cur.s + 1) / fps >= p.hold) holds.push(cur);
+  const out = [res(`travel: stops at each of the ${p.labels.length} stops for ≥ ${p.hold}s`, holds.length >= p.labels.length, holds.length, `≥ ${p.labels.length}`)];
+  if (holds.length < 2) return out;
+  const dir = Math.sign(x[holds[holds.length - 1].s] - x[holds[0].s]);
+  const back = maxOf(x.slice(holds[0].s + 1, holds[holds.length - 1].e + 1).map((v, i) => (v - x[holds[0].s + i]) * -dir));
+  out.push(res("travel: always the same way, no overshoot past a stop", back <= 0.5, back, "≤ 0.5px"));
+  const pans = holds.slice(1).map((h, k) => ({ s: holds[k].e, e: h.s }));
+  const eased = pans.map((q) => easeRatios(x, q, fps));
+  out.push(res("travel: each move starts and stops gently (end speeds < 35% of peak)", eased.every((e) => e && e.inR < 0.35 && e.outR < 0.35), eased.map((e) => e && [r2(e.inR), r2(e.outR)]), "< 0.35"));
+  const centred = holds.slice(0, p.labels.length).every((h, k) => { const s = ctx.frames[Math.round((h.s + h.e) / 2)].roles[p.labels[k]]; return s && s.o > 0.9 && Math.abs(s.x + s.w / 2 - 960) <= 40; });
+  out.push(res("travel: each stop's word sits in the middle of the frame when stopped", centred, centred, true));
+  return out;
+};
+
+// ---------- the Open Design one-shape brief ----------
+// Plateaus of the shape's size: the UI states it rests in between changes.
+function plateaus(ctx, role, minDur = 0.1) {
+  const w = series(ctx, role, "w"), h = series(ctx, role, "h"), fps = ctx.fps, out = [];
+  let s = 0;
+  for (let i = 1; i <= w.length; i++) {
+    const moving = i === w.length || w[i] == null || Math.abs(w[i] - w[i - 1]) > 0.5 || Math.abs(h[i] - h[i - 1]) > 0.5;
+    if (moving) { if ((i - s) / fps >= minDur) out.push({ s, e: i - 1, w: w[s], h: h[s] }); s = i; }
+  }
+  return out;
+}
+
+T.one_shape = (ctx, p) => {
+  const o = series(ctx, p.role, "o"), fr = ctx.frames;
+  const always = fr.every((f) => f.roles[p.role] && f.roles[p.role].o >= 0.9 && visibleAt(f.roles[p.role]));
+  let jump = 0;
+  for (let i = 1; i < fr.length; i++) {
+    const a = fr[i - 1].roles[p.role], b = fr[i].roles[p.role];
+    if (!a || !b) { jump = Infinity; break; }
+    jump = Math.max(jump, Math.abs(a.x - b.x), Math.abs(a.y - b.y), Math.abs(a.x + a.w - b.x - b.w), Math.abs(a.y + a.h - b.y - b.h));
+  }
+  const pl = plateaus(ctx, p.role);
+  const distinct = [];
+  for (const q of pl) if (!distinct.some((d) => Math.abs(d.w - q.w) <= 6 && Math.abs(d.h - q.h) <= 6)) distinct.push(q);
+  return [
+    res("one shape: on screen the whole time, never faded or hidden", always, always, true),
+    res("one shape: never cut (no edge jumps ≥ 400px in a frame)", jump < 400, jump, "< 400"),
+    res(`one shape: morphs through at least ${p.states} different forms`, distinct.length >= p.states, distinct.length, `≥ ${p.states}`),
+  ];
+};
+
+T.cursor_drives = (ctx, p) => {
+  // Every change of the shape begins while the cursor is on it (or just reaching it).
+  const pl = plateaus(ctx, p.shape), fps = ctx.fps;
+  const starts = pl.slice(0, -1).map((q) => q.e + 1);
+  const ok = starts.map((i) => {
+    for (let j = Math.max(0, i - Math.round(0.35 * fps)); j <= Math.min(ctx.frames.length - 1, i + 2); j++) {
+      const c = ctx.frames[j].roles[p.cursor], s = ctx.frames[j].roles[p.shape];
+      if (!c || !s || c.o < 0.5) continue;
+      const tip = [c.x + Math.min(c.w, 12) / 2, c.y + Math.min(c.h, 12) / 2];
+      if (tip[0] >= s.x - 30 && tip[0] <= s.x + s.w + 30 && tip[1] >= s.y - 30 && tip[1] <= s.y + s.h + 30) return true;
+    }
+    return false;
+  });
+  const share = ok.length ? ok.filter(Boolean).length / ok.length : 0;
+  const cv = series(ctx, p.cursor, "o");
+  const seen = cv.filter((x) => x != null && x >= 0.5).length / cv.length;
+  return [
+    res("cursor: on screen most of the piece (≥ 80%)", seen >= 0.8, seen, "≥ 0.8"),
+    res(`cursor: on the shape when each change begins (≥ 80% of ${ok.length} changes)`, ok.length >= 4 && share >= 0.8, share, "≥ 0.8"),
+  ];
+};
+
+T.springs = (ctx, p) => {
+  // Between two rest states the size may pass the target a little and settle; "a tiny overshoot at most".
+  const pl = plateaus(ctx, p.role), w = series(ctx, p.role, "w"), h = series(ctx, p.role, "h");
+  const over = [];
+  for (let k = 1; k < pl.length; k++) {
+    const a = pl[k - 1], b = pl[k];
+    for (const [v, from, to] of [[w, a.w, b.w], [h, a.h, b.h]]) {
+      const delta = Math.abs(to - from);
+      if (delta < 24) continue;  // small changes: a pixel of spring is not a share worth judging
+      const seg = v.slice(a.e, b.s + 1);
+      const past = Math.max(0, to > from ? maxOf(seg) - to : to - minOf(seg));
+      over.push(past <= 3 ? Math.min(past / delta, 0.004) : past / delta);
+    }
+  }
+  // The brief's own slider "stretches when dragged past max", so one deliberate overshoot is allowed for.
+  const within = over.length ? over.filter((x) => x <= p.max).length / over.length : 0, some = over.filter((x) => x > 0.005).length;
+  return [
+    res(`springs: overshoot stays tiny (≤ 3px or ${p.max * 100}% of the change) on ≥ 85% of changes`, over.length >= 4 && within >= 0.85, within, "≥ 0.85"),
+    res("springs: changes settle with a little spring, not a linear slide (some overshoot on ≥ 25% of changes)", over.length >= 4 && some / over.length >= 0.25, over.length ? some / over.length : null, "≥ 0.25"),
+  ];
+};
+
+T.beat_activity = (ctx, p) => {
+  const b = ctx.pixels.beats || [];
+  const share = b.length ? b.filter((x) => x.moving).length / b.length : 0;
+  return [res(`beat: something moves on every beat at ${p.bpm} BPM (≥ 90% of ${b.length} beats)`, share >= 0.9, share, "≥ 0.9")];
+};
+
+T.loop = (ctx, p) => {
+  const L = ctx.pixels.loop;
+  const f0 = ctx.frames[0].roles, f1 = ctx.frames[ctx.frames.length - 1].roles;
+  const same = Object.keys(f0).every((k) => f1[k] && ["x", "y", "w", "h", "o"].every((q) => Math.abs(f0[k][q] - f1[k][q]) <= (q === "o" ? 0.02 : 2)));
+  return [res("loop: the last frame is the first frame", L != null && L <= 0.01 && same, { pixels: L, roles: same }, "≤ 1% of pixels differ")];
 };
 
 // ---------- pixel checks (computed from screenshots by grade.mjs) ----------
@@ -593,8 +782,10 @@ T.curtain = (ctx, p) => {
   }
   const b0 = c[0], b1 = c[c.length - 1];
   return [
-    res(`curtain: starts at ${p.start[0]}–${p.start[1]}s`, ts != null && ts >= p.start[0] && ts <= p.start[1], ts, p.start),
-    res(`curtain: covers the frame by ${p.cover[0]}–${p.cover[1]}s (a wipe, not a cut)`, te != null && te >= p.cover[0] && te <= p.cover[1] && te - ts >= 0.2, te, p.cover),
+    ...(p.start ? [res(`curtain: starts at ${p.start[0]}–${p.start[1]}s`, ts != null && ts >= p.start[0] && ts <= p.start[1], ts, p.start)] : []),
+    p.cover
+      ? res(`curtain: covers the frame by ${p.cover[0]}–${p.cover[1]}s (a wipe, not a cut)`, te != null && te >= p.cover[0] && te <= p.cover[1] && te - ts >= 0.2, te, p.cover)
+      : res("curtain: covers the whole frame, as a wipe (≥ 0.2s), not a cut", ts != null && te != null && te - ts >= 0.2, ts != null && te != null ? te - ts : null, "≥ 0.2s"),
     res("curtain: rises from the bottom edge", fromBelow, fromBelow, true),
     res("curtain: only moves one way", mono, mono, true),
     res("curtain: a hard edge between surfaces, no crossfade (≤ 4% mixed pixels)", mixed <= 0.04, mixed, "≤ 0.04"),
@@ -608,6 +799,12 @@ T.mask = (ctx, p) => {
   if (!m || !m.length) return [res("mask: measured", false, null, "frames")];
   const worst = maxOf(m.map((f) => f.outside));
   return [res("rise: never seen outside its line (masked, ≤ 150 ink pixels outside)", worst <= 150, worst, "≤ 150")];
+};
+
+T.surface_light_warm = (ctx, p) => {
+  const s = ctx.pixels.surface || [];
+  const ok = s.length > 0 && s.every((x) => { const c = [1, 3, 5].map((i) => parseInt(x.got.slice(i, i + 2), 16)); return Math.min(...c) >= 200 && c[0] >= c[2] && Math.max(...c) - Math.min(...c) <= 16; });
+  return [res("canvas: a light warm gray, as asked", ok, s.slice(0, 3).map((x) => x.got), "light, r ≥ b, near-neutral")];
 };
 
 T.surface = (ctx, p) => {
@@ -625,7 +822,8 @@ export function contract(ctx, task) {
   const out = [];
   out.push(res("contract: loads, with no page errors", !ctx.log.errors.length, ctx.log.errors.slice(0, 3), "no errors"));
   out.push(res("contract: offline (nothing fetched from outside the folder)", !ctx.log.network.length, ctx.log.network.slice(0, 3), "none"));
-  out.push(res(`contract: timeline lasts ${task.duration}s`, Math.abs(ctx.duration - task.duration) <= 0.02, ctx.duration, task.duration));
+  if (task.duration_range) out.push(res(`contract: lasts ${task.duration_range[0]}–${task.duration_range[1]}s`, ctx.duration >= task.duration_range[0] && ctx.duration <= task.duration_range[1], ctx.duration, task.duration_range));
+  else out.push(res(`contract: timeline lasts ${task.duration}s`, Math.abs(ctx.duration - task.duration) <= 0.02, ctx.duration, task.duration));
   const missing = task.roles.filter((r) => !ctx.frames.some((f) => f.roles[r]));
   const dup = task.roles.filter((r) => ctx.frames.some((f) => f.roles[r] && f.roles[r].dup));
   out.push(res("contract: every role is tagged, once", !missing.length && !dup.length, { missing, dup }, "all, unique"));
@@ -635,8 +833,9 @@ export function contract(ctx, task) {
   for (const s of ctx.scans)
     for (const [kind, val, tag] of s.effects) {
       let bad = false;
-      if (kind === "filter") bad = /blur\(/.test(val) || /drop-shadow/.test(val) && !shadowOk(val);
-      else if (kind === "box-shadow" || kind === "text-shadow") bad = !shadowOk(val);
+      const okShadow = task.palette === "neutral" ? darkShadow : shadowOk;  // Open Design asks for a soft drop shadow
+      if (kind === "filter") bad = /blur\(/.test(val) || /drop-shadow/.test(val) && !okShadow(val);
+      else if (kind === "box-shadow" || kind === "text-shadow") bad = !okShadow(val);
       else if (kind === "background-image") bad = /gradient\(/.test(val);
       else if (kind === "backdrop-filter" || kind === "css-animation" || kind === "css-transition") bad = true;
       if (bad && !effects.some((e) => e[0] === kind && e[2] === tag)) effects.push([kind, val.slice(0, 80), tag]);
@@ -646,13 +845,17 @@ export function contract(ctx, task) {
   for (const s of ctx.scans)
     for (const [c, why] of Object.entries(s.colors)) {
       const v = rgb(c);
-      if (v && !PALETTE.some((p) => near(v.c, p, 1)) && !off.some((o) => o[0] === c)) off.push([c, why[0]]);
+      const ok = task.palette === "neutral" ? Math.max(...v.c) - Math.min(...v.c) <= 14 : PALETTE.some((p) => near(v.c, p, 1));
+      if (v && !ok && !off.some((o) => o[0] === c)) off.push([c, why[0]]);
     }
-  out.push(res("brand: only the palette's colours", !off.length, off.slice(0, 4), "brand palette"));
+  out.push(task.palette === "neutral"
+    ? res("art direction: black, white and warm grays only", !off.length, off.slice(0, 4), "neutral colours")
+    : res("brand: only the palette's colours", !off.length, off.slice(0, 4), "brand palette"));
   const fonts = new Set(), loaded = new Set();
   for (const s of ctx.scans) { Object.keys(s.fonts).forEach((f) => fonts.add(f.split(",")[0].replace(/["']/g, "").trim())); s.loaded.forEach((f) => loaded.add(f)); }
-  const badFont = [...fonts].map((f) => f.replace(/ \d+$/, "")).filter((f) => !["Open Sauce Two", "JetBrains Mono"].includes(f) || !loaded.has(f));
-  out.push(res("brand: only the brand's fonts, loaded from the folder", !badFont.length, [...new Set(badFont)], "Open Sauce Two / JetBrains Mono"));
+  const allowed = task.fonts || ["Open Sauce Two", "JetBrains Mono"];
+  const badFont = [...fonts].map((f) => f.replace(/ \d+$/, "")).filter((f) => !allowed.includes(f) || !loaded.has(f));
+  out.push(res(`${task.fonts ? "art direction" : "brand"}: only ${allowed.join(" / ")}, loaded from the folder`, !badFont.length, [...new Set(badFont)], allowed.join(" / ")));
   const last = ctx.frames[ctx.frames.length - 1].roles;
   // Containers bigger than the frame (a world the camera moves over) are not text blocks.
   const unsafe = Object.entries(last).filter(([k, r]) => r.text && r.text.trim() && r.o > 0.5 && visibleAt(r) && r.w <= FRAME.W && r.h <= FRAME.H && !inSafe(r)).map(([k]) => k);
@@ -660,6 +863,12 @@ export function contract(ctx, task) {
   const jit = jitter(ctx, task.oscillate || []);
   out.push(res("motion: no jitter or shake", !jit.length, jit.slice(0, 3), "none"));
   return out;
+}
+
+function darkShadow(val) {
+  // Any dark shadow, warm or cool; light or coloured ones are glow.
+  const cols = val.match(/rgba?\([^)]+\)/g) || [];
+  return cols.every((c) => { const v = rgb(c); return v && (v.a === 0 || (Math.max(...v.c) <= 90 && Math.max(...v.c) - Math.min(...v.c) <= 40)); });
 }
 
 function shadowOk(val) {

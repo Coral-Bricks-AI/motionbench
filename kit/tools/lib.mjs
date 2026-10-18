@@ -58,7 +58,12 @@ const PAGE = () => {
     seek(t) {
       const tl = window.__timelines && window.__timelines.main;
       tl.pause();
-      tl.seek(t, false);
+      try {
+        tl.seek(t, false);
+      } catch (e) {
+        // The composition's own code threw while drawing this frame: keep measuring, report it as a page error.
+        (window.__mbErrors = window.__mbErrors || []).push(`at ${t}s: ${String(e).slice(0, 200)}`);
+      }
     },
     roles() {
       cache.clear();
@@ -163,7 +168,10 @@ export async function open(dir, { headless = true } = {}) {
       const buf = await page.screenshot({ type: "png" });
       return scale === 1 ? buf : PNG.sync.write(shrink(PNG.sync.read(buf), scale));
     },
-    async close() { await browser.close(); },
+    async close() {
+      try { for (const e of (await page.evaluate(() => window.__mbErrors || [])).slice(0, 5)) log.errors.push(e); } catch {}
+      await browser.close();
+    },
   };
 }
 

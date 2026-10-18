@@ -86,7 +86,11 @@ def seatbelt(ws, conf):
         "(allow network-outbound (remote unix-socket))", ""])
 
 
-def claude_token():
+import threading
+REFRESH = threading.Lock()
+
+
+def claude_token(need=35 * 60):
     """The Claude subscription's current OAuth access token from the keychain (Claude Code's own login).
     If it is close to expiring, one tiny ordinary Claude Code call makes Claude Code refresh it."""
     def read():
@@ -94,11 +98,17 @@ def claude_token():
         o = json.loads(raw)["claudeAiOauth"]
         return o["accessToken"], o["expiresAt"] / 1000 - time.time()
     tok, left = read()
-    if left < 40 * 60:
-        subprocess.run(["claude", "-p", "--model", "claude-haiku-5-5", "reply ok"], capture_output=True, stdin=subprocess.DEVNULL, timeout=120)
-        tok, left = read()
-    if left < 35 * 60:
-        sys.exit("the Claude subscription token could not be refreshed")
+    if left < need:
+        # Claude Code refreshes its login only close to expiry: wait until then, make one tiny ordinary call
+        # (as a second Claude Code session would), and read the refreshed token.
+        with REFRESH:
+            tok, left = read()
+            if left < need:
+                time.sleep(max(0, left - 240))
+                subprocess.run(["claude", "-p", "--model", "claude-haiku-5-5", "reply ok"], capture_output=True, stdin=subprocess.DEVNULL, timeout=180)
+                tok, left = read()
+    if left < need:
+        raise RuntimeError("the Claude subscription token could not be refreshed")
     return tok
 
 
@@ -138,6 +148,9 @@ def run_one(name, task, attempt, key, chome=None):
                    "-m", cfg["model"], "-c", "model_reasoning_effort=high", "-c", "shell_environment_policy.inherit=core", "--json", PROMPT]
     else:
         os.makedirs(os.path.join(conf, "tmp"))
+        # 64k output per reply for every Claude Code model: a reasoning budget plus a whole page written in one
+        # go does not fit the default 32k, and hitting it ends the session.
+        env.update({"CLAUDE_CODE_MAX_OUTPUT_TOKENS": "64000"})
         env.update({"CLAUDE_CONFIG_DIR": os.path.join(conf, "claude"), "CLAUDE_CODE_SUBPROCESS_ENV_SCRUB": "1",
                     "CLAUDE_CODE_TMPDIR": os.path.join(conf, "tmp"), "CLAUDE_TMPDIR": os.path.join(conf, "tmp")})
         if cfg.get("gateway"):
@@ -149,11 +162,15 @@ def run_one(name, task, attempt, key, chome=None):
             env["ANTHROPIC_BASE_URL"] = cfg["base_url"]
             env["ANTHROPIC_AUTH_TOKEN"] = os.environ[cfg["key_env"]]
         else:
-            env["CLAUDE_CODE_OAUTH_TOKEN"] = claude_token()
+            env["CLAUDE_CODE_OAUTH_TOKEN"] = claude_token(json.load(open(os.path.join(ROOT, "tasks", task, "task.json"))).get("timeout", TIMEOUT) + 300)
         harness = ["claude", "-p", "--safe-mode", "--model", cfg["model"], "--effort", "high", "--tools", "Bash,Read,Write,Edit,Glob,Grep",
                    "--allowedTools", "Bash", "Read", "Write", "Edit", "Glob", "Grep",
                    "--no-session-persistence", "--output-format", "stream-json", "--verbose", PROMPT]
-    cmd = ["perl", "-e", "alarm shift; exec @ARGV", str(TIMEOUT), "sandbox-exec", "-f", sb] + harness
+    tj = json.load(open(os.path.join(ROOT, "tasks", task, "task.json")))
+    limit = tj.get("timeout", TIMEOUT)
+    prompt = tj.get("prompt", PROMPT)
+    harness = [prompt if a is PROMPT else a for a in harness]
+    cmd = ["perl", "-e", "alarm shift; exec @ARGV", str(limit), "sandbox-exec", "-f", sb] + harness
     try:
         return finish(name, cfg, task, attempt, ws, out, cmd, env, codex=cfg.get("harness") == "codex")
     finally:
@@ -170,7 +187,7 @@ def finish(name, cfg, task, attempt, ws, out, cmd, env, codex=False):
     with open(os.path.join(out, "transcript.jsonl"), "w") as tr, open(os.path.join(out, "stderr.txt"), "w") as er:
         p = subprocess.run(cmd, cwd=ws, env=env, stdin=subprocess.DEVNULL, stdout=tr, stderr=er)
     wall = time.time() - t0
-    info = {"model": cfg["model"], "task": task, "attempt": attempt, "exit": p.returncode, "wall_s": round(wall, 1), "timed_out": p.returncode == 142 or wall >= TIMEOUT - 5}
+    info = {"model": cfg["model"], "task": task, "attempt": attempt, "exit": p.returncode, "wall_s": round(wall, 1), "timed_out": p.returncode in (142, -14)}
     for line in open(os.path.join(out, "transcript.jsonl")):
         try:
             d = json.loads(line)
@@ -241,7 +258,14 @@ def main():
     time.sleep(1)
     try:
         with ThreadPoolExecutor(a.jobs) as ex:
-            for name, task, attempt, r, how in ex.map(lambda j: run_one(*j, key, chome), jobs):
+            def safe(j):
+                # One job's failure (a login that will not refresh, a crash) must not stop the others: a batch
+                # that stopped once took its in-flight runs down with it.
+                try:
+                    return run_one(*j, key, chome)
+                except Exception as e:  # noqa: BLE001
+                    return j[0], j[1], j[2], None, f"failed to run: {str(e)[:160]}"
+            for name, task, attempt, r, how in ex.map(safe, jobs):
                 s = f"{r['score']:.3f} craft {r['craft']:.2f} contract {r['contract']:.2f}" if r else "no result"
                 print(f"{name:14} {task:20} a{attempt}  {s}  ({how})", flush=True)
     finally:

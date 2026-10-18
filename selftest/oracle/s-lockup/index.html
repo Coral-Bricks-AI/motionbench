@@ -1,0 +1,22 @@
+<!doctype html><html><head><meta charset="utf-8"><style>
+@font-face{font-family:"Open Sauce Two";src:url(assets/fonts/OpenSauceTwo-Regular.ttf);font-weight:400}
+@font-face{font-family:"Open Sauce Two";src:url(assets/fonts/OpenSauceTwo-SemiBold.ttf);font-weight:600}
+@font-face{font-family:"Open Sauce Two";src:url(assets/fonts/OpenSauceTwo-Bold.ttf);font-weight:700}
+@font-face{font-family:"JetBrains Mono";src:url(assets/fonts/JetBrainsMono-Regular.woff2);font-weight:400}
+html,body{margin:0;width:1920px;height:1080px;overflow:hidden;background:#F9F9FA}
+#stage{position:absolute;inset:0;width:1920px;height:1080px;overflow:hidden;background:#F9F9FA;font-family:"Open Sauce Two";color:#0A0C11}
+.abs{position:absolute}
+.card{background:#FDFDFD;border:2px solid #DDDFE4;border-radius:24px;box-sizing:border-box}
+.h{font-size:104px;font-weight:600;letter-spacing:-0.025em;white-space:nowrap}
+
+</style></head><body><div id="stage"><div class="abs" style="inset:0;display:flex;align-items:center;justify-content:center;gap:56px"><img data-role="mark" src="assets/logo-icon.svg" style="height:260px;width:auto;transform:scale(0)"><span data-role="wordmark" style="font-weight:700;font-size:150px;letter-spacing:-0.025em;line-height:1;color:#0A0C11;opacity:0">CoralBricks</span></div></div>
+<script src="assets/gsap.min.js"></script>
+<script>(function(){
+const tl = gsap.timeline({paused:true});
+tl.to("[data-role=mark]",{scale:1,duration:0.7,ease:"back.out(2)"},0.3)
+  .set("[data-role=wordmark]",{opacity:1},0.85)
+  .fromTo("[data-role=wordmark]",{x:-60,clipPath:"inset(0% 100% 0% 0%)"},{x:0,clipPath:"inset(0% 0% 0% 0%)",duration:0.6,ease:"power3.out",immediateRender:false},0.85);
+tl.set({}, {}, 3.0);
+window.__timelines = window.__timelines || {};
+window.__timelines.main = tl;
+})();</script></body></html>

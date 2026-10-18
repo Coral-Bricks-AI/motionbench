@@ -1,0 +1,66 @@
+{
+ "id": "s-lockup",
+ "track": "studio",
+ "principle": "the lockup",
+ "duration": 3.0,
+ "fps": 60,
+ "roles": [
+  "mark",
+  "wordmark"
+ ],
+ "checks": [
+  {
+   "type": "lockup",
+   "mark": "mark",
+   "wordmark": "wordmark",
+   "hold_from": 1.6
+  },
+  {
+   "type": "coral_mark"
+  },
+  {
+   "type": "surface",
+   "colour": "#F9F9FA"
+  }
+ ],
+ "shots": [
+  0.0,
+  0.429,
+  0.857,
+  1.286,
+  1.714,
+  2.143,
+  2.571,
+  3.0
+ ],
+ "pixels": {
+  "coral_mark": {
+   "role": "mark"
+  },
+  "surface": {
+   "t": [
+    2.9
+   ],
+   "points": [
+    [
+     30,
+     30
+    ],
+    [
+     1890,
+     30
+    ],
+    [
+     30,
+     1050
+    ],
+    [
+     1890,
+     1050
+    ]
+   ],
+   "colour": "#F9F9FA"
+  }
+ },
+ "oscillate": []
+}

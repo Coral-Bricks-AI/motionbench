@@ -1,0 +1,25 @@
+<!doctype html><html><head><meta charset="utf-8"><style>
+@font-face{font-family:"Open Sauce Two";src:url(assets/fonts/OpenSauceTwo-Regular.ttf);font-weight:400}
+@font-face{font-family:"Open Sauce Two";src:url(assets/fonts/OpenSauceTwo-SemiBold.ttf);font-weight:600}
+@font-face{font-family:"Open Sauce Two";src:url(assets/fonts/OpenSauceTwo-Bold.ttf);font-weight:700}
+@font-face{font-family:"JetBrains Mono";src:url(assets/fonts/JetBrainsMono-Regular.woff2);font-weight:400}
+html,body{margin:0;width:1920px;height:1080px;overflow:hidden;background:#1B202A}
+#stage{position:absolute;inset:0;width:1920px;height:1080px;overflow:hidden;background:#1B202A;font-family:"Open Sauce Two";color:#0A0C11}
+.abs{position:absolute}
+.card{background:#FDFDFD;border:2px solid #DDDFE4;border-radius:24px;box-sizing:border-box}
+.h{font-size:104px;font-weight:600;letter-spacing:-0.025em;white-space:nowrap}
+
+</style></head><body><div id="stage"><pre class="abs" style="left:120px;top:96px;width:1680px;margin:0;font-family:'JetBrains Mono';font-size:30px;line-height:44px;color:#FDFDFD;white-space:pre-wrap"><span data-role="reply"></span><span data-role="cursor" style="display:inline-block;width:16px;height:34px;vertical-align:-6px;background:#D44027"></span></pre></div>
+<script src="assets/gsap.min.js"></script>
+<script>(function(){
+const tl = gsap.timeline({paused:true});
+const T=["Here", " is", " the", " requ", "est", " that", " the", " gate", "way", " rece", "ived", ",", " and", " what", " it", " did", " with", " it", ".", "\n", "\n", "POST", " /", "v", "1", "/", "chat", "/", "comp", "leti", "ons", "\n", "model", ":", " deep", "seek", "-", "v", "4", ".", "1", "-", "flash", "-", "fast", "\n", "max", "_", "tokens", ":", " 1024", "\n", "stream", ":", " true", "\n", "\n", "The", " requ", "est", " was", " routed", " to", " the", " near", "est", " repl", "ica", " with", " a", " warm", " cache", " for", " this", " prefix", ",", " so", " the", " first", " token", " came", " back", " in", " 180", " mill", "isec", "onds", ".", " Every", " token", " after", " that", " stre", "amed", " at", " the", " model", "'", "s", " own", " pace", ",", " about", " 340", " tokens", " per", " second", ",", " which", " is", " faster", " than", " anyone", " can", " comf", "orta", "bly", " read", ".", " Reas", "onin", "g", " was", " not", " requ", "este", "d", ",", " so", " none", " was", " gene", "rate", "d", ".", " The", " reply", " stop", "ped", " on", " its", " own", ",", " with", " finish", "_", "reason", " set", " to", " stop", ",", " after", " 412", " output", " tokens", ".", "\n", "\n", "Usage", ":", " 1", ",", "208", " input", " tokens", " (", "1", ",", "024", " from", " cache", ")", ",", " 412", " output", " tokens", ".", " Noth", "ing", " was", " stored", " after", " the", " resp", "onse", " was", " sent", ",", " and", " the", " same", " requ", "est", " sent", " again", " would", " be", " routed", " the", " same", " way", ".", " If", " you", " want", " the", " requ", "est", " to", " be", " retr", "ied", " on", " a", " diff", "eren", "t", " repl", "ica", " when", " one", " is", " slow", ",", " set", " a", " time", "out", " and", " let", " the", " client", " retry", ";", " the", " gate", "way", " will", " not", " hold", " a", " requ", "est", " longer", " than", " you", " ask", " it", " to", "."];
+const r=document.querySelector("[data-role=reply]"), c=document.querySelector("[data-role=cursor]");
+const p={k:0};
+const draw=()=>{ r.textContent=T.slice(0,Math.floor(p.k+1e-6)).join(""); };
+draw();
+tl.to(p,{k:T.length,duration:T.length/90,ease:"none",onUpdate:draw},0.5);
+tl.set({}, {}, 4.0);
+window.__timelines = window.__timelines || {};
+window.__timelines.main = tl;
+})();</script></body></html>

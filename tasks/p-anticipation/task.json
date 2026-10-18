@@ -1,0 +1,73 @@
+{
+ "id": "p-anticipation",
+ "track": "principles",
+ "principle": "anticipation",
+ "duration": 2.5,
+ "fps": 60,
+ "roles": [
+  "puck",
+  "floor"
+ ],
+ "checks": [
+  {
+   "type": "still",
+   "role": "puck",
+   "from": 0,
+   "to": 0.3
+  },
+  {
+   "type": "anticipation",
+   "role": "puck",
+   "key": "cx",
+   "dir": 1,
+   "min_frac": 0.015,
+   "max_frac": 0.3,
+   "lead": [
+    0.1,
+    0.8
+   ],
+   "speed_ratio": 0.5,
+   "release": [
+    0.85,
+    1.4
+   ]
+  },
+  {
+   "type": "at",
+   "role": "puck",
+   "key": "b",
+   "from": 0,
+   "to": 2.5,
+   "min": 756,
+   "max": 764,
+   "id": "puck: stays on the floor"
+  },
+  {
+   "type": "at",
+   "role": "puck",
+   "key": "cx",
+   "from": 2.35,
+   "to": 2.5,
+   "min": 1540,
+   "max": 1580
+  },
+  {
+   "type": "still",
+   "role": "puck",
+   "from": 2.35,
+   "to": 2.5
+  }
+ ],
+ "shots": [
+  0.0,
+  0.357,
+  0.714,
+  1.071,
+  1.429,
+  1.786,
+  2.143,
+  2.5
+ ],
+ "pixels": {},
+ "oscillate": []
+}

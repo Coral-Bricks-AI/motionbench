@@ -1,0 +1,54 @@
+{
+ "id": "s-rise",
+ "track": "studio",
+ "principle": "line-mask rise",
+ "duration": 3.0,
+ "fps": 60,
+ "roles": [
+  "line-1",
+  "line-2",
+  "accent"
+ ],
+ "checks": [
+  {
+   "type": "rise",
+   "lines": [
+    "line-1",
+    "line-2"
+   ],
+   "accent": "accent",
+   "accent_text": "details.",
+   "gap": [
+    0.05,
+    0.4
+   ],
+   "hold_from": 1.6,
+   "min_h": 80
+  },
+  {
+   "type": "mask"
+  }
+ ],
+ "shots": [
+  0.0,
+  0.429,
+  0.857,
+  1.286,
+  1.714,
+  2.143,
+  2.571,
+  3.0
+ ],
+ "pixels": {
+  "mask": {
+   "from": 0.0,
+   "to": 1.6,
+   "lines": [
+    "line-1",
+    "line-2"
+   ],
+   "surface": "#F9F9FA"
+  }
+ },
+ "oscillate": []
+}

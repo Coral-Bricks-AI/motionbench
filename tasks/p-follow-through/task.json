@@ -1,0 +1,71 @@
+{
+ "id": "p-follow-through",
+ "track": "principles",
+ "principle": "follow-through and settle",
+ "duration": 2.0,
+ "fps": 60,
+ "roles": [
+  "badge"
+ ],
+ "checks": [
+  {
+   "type": "overshoot",
+   "role": "badge",
+   "key": "w",
+   "over": [
+    0.03,
+    0.3
+   ],
+   "settle": 1.2,
+   "max_cross": 4,
+   "appear": [
+    0.35,
+    0.55
+   ]
+  },
+  {
+   "type": "at",
+   "role": "badge",
+   "key": "cx",
+   "t": 2.0,
+   "min": 954,
+   "max": 966
+  },
+  {
+   "type": "at",
+   "role": "badge",
+   "key": "cy",
+   "t": 2.0,
+   "min": 534,
+   "max": 546
+  },
+  {
+   "type": "at",
+   "role": "badge",
+   "key": "w",
+   "t": 2.0,
+   "min": 218,
+   "max": 222
+  },
+  {
+   "type": "still",
+   "role": "badge",
+   "from": 1.7,
+   "to": 2.0
+  }
+ ],
+ "shots": [
+  0.0,
+  0.286,
+  0.571,
+  0.857,
+  1.143,
+  1.429,
+  1.714,
+  2.0
+ ],
+ "pixels": {},
+ "oscillate": [
+  "badge"
+ ]
+}

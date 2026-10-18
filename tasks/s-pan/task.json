@@ -1,0 +1,47 @@
+{
+ "id": "s-pan",
+ "track": "studio",
+ "principle": "camera pan between stations",
+ "duration": 6.0,
+ "fps": 60,
+ "roles": [
+  "world",
+  "station-1",
+  "station-2",
+  "station-3"
+ ],
+ "checks": [
+  {
+   "type": "stations",
+   "world": "world",
+   "targets": [
+    0,
+    -1920,
+    -3840
+   ],
+   "labels": [
+    "station-1",
+    "station-2",
+    "station-3"
+   ],
+   "hold": 0.9,
+   "dur": [
+    0.5,
+    1.6
+   ],
+   "edge": 0.03
+  }
+ ],
+ "shots": [
+  0.0,
+  0.857,
+  1.714,
+  2.571,
+  3.429,
+  4.286,
+  5.143,
+  6.0
+ ],
+ "pixels": {},
+ "oscillate": []
+}

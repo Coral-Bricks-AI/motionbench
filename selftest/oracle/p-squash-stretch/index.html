@@ -1,0 +1,36 @@
+<!doctype html><html><head><meta charset="utf-8"><style>
+@font-face{font-family:"Open Sauce Two";src:url(assets/fonts/OpenSauceTwo-Regular.ttf);font-weight:400}
+@font-face{font-family:"Open Sauce Two";src:url(assets/fonts/OpenSauceTwo-SemiBold.ttf);font-weight:600}
+@font-face{font-family:"Open Sauce Two";src:url(assets/fonts/OpenSauceTwo-Bold.ttf);font-weight:700}
+@font-face{font-family:"JetBrains Mono";src:url(assets/fonts/JetBrainsMono-Regular.woff2);font-weight:400}
+html,body{margin:0;width:1920px;height:1080px;overflow:hidden;background:#F9F9FA}
+#stage{position:absolute;inset:0;width:1920px;height:1080px;overflow:hidden;background:#F9F9FA;font-family:"Open Sauce Two";color:#0A0C11}
+.abs{position:absolute}
+.card{background:#FDFDFD;border:2px solid #DDDFE4;border-radius:24px;box-sizing:border-box}
+.h{font-size:104px;font-weight:600;letter-spacing:-0.025em;white-space:nowrap}
+
+</style></head><body><div id="stage"><div class="abs" data-role="floor" style="left:0;top:879px;width:1920px;height:2px;background:#DDDFE4"></div><div class="abs" data-role="ball" style="left:890px;top:740px;width:140px;height:140px;border-radius:50%;background:#D44027;transform-origin:50% 100%"></div></div>
+<script src="assets/gsap.min.js"></script>
+<script>(function(){
+const tl = gsap.timeline({paused:true});
+
+const b = "[data-role=ball]";
+gsap.set(b, {y:-620, transformOrigin:"50% 100%"});
+let t = 0.3; const H = [620, 300, 140, 60];
+const fall = (h) => 0.45 * Math.sqrt(h / 620);
+for (let k = 0; k < H.length; k++) {
+  const d = fall(H[k]);
+  if (k > 0) { tl.to(b, {y:-H[k], duration:d, ease:"power2.out"}, t); t += d; }
+  tl.to(b, {y:0, duration:d, ease:"power2.in"}, t);
+  tl.to(b, {scaleY:1 + 0.12 * H[k] / 620, scaleX:1 / (1 + 0.12 * H[k] / 620), duration:d * 0.35, ease:"sine.in"}, t + d * 0.65);
+  t += d;
+  const s = 0.2 * Math.sqrt(H[k] / 620) + 0.05;
+  tl.to(b, {scaleY:1 - s, scaleX:1 / (1 - s), duration:0.04, ease:"power2.out"}, t);
+  tl.to(b, {scaleY:1, scaleX:1, duration:0.06, ease:"power2.inOut"}, t + 0.04);
+  t += 0.06;
+}
+
+tl.set({}, {}, 4.0);
+window.__timelines = window.__timelines || {};
+window.__timelines.main = tl;
+})();</script></body></html>

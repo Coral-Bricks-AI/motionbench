@@ -1,0 +1,64 @@
+{
+ "id": "s-stream",
+ "track": "studio",
+ "principle": "real rates",
+ "duration": 4.0,
+ "fps": 60,
+ "roles": [
+  "reply",
+  "cursor"
+ ],
+ "checks": [
+  {
+   "type": "stream",
+   "reply": "reply",
+   "cursor": "cursor",
+   "start": 0.5,
+   "rate": 340,
+   "tol": 12
+  },
+  {
+   "type": "surface",
+   "colour": "#1B202A"
+  }
+ ],
+ "shots": [
+  0,
+  0.5,
+  0.8,
+  1.1,
+  1.4,
+  1.7,
+  2.0,
+  3.9
+ ],
+ "pixels": {
+  "surface": {
+   "t": [
+    0.2,
+    2.0,
+    3.9
+   ],
+   "points": [
+    [
+     30,
+     30
+    ],
+    [
+     1890,
+     30
+    ],
+    [
+     30,
+     1050
+    ],
+    [
+     1890,
+     1050
+    ]
+   ],
+   "colour": "#1B202A"
+  }
+ },
+ "oscillate": []
+}

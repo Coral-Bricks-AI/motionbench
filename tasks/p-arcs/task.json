@@ -1,0 +1,52 @@
+{
+ "id": "p-arcs",
+ "track": "principles",
+ "principle": "arcs",
+ "duration": 2.4,
+ "fps": 60,
+ "roles": [
+  "dot"
+ ],
+ "checks": [
+  {
+   "type": "still",
+   "role": "dot",
+   "from": 0,
+   "to": 0.35
+  },
+  {
+   "type": "arc",
+   "role": "dot",
+   "min_dev": 0.12,
+   "land": 2.2
+  },
+  {
+   "type": "at",
+   "role": "dot",
+   "key": "cx",
+   "t": 2.4,
+   "min": 1610,
+   "max": 1630
+  },
+  {
+   "type": "at",
+   "role": "dot",
+   "key": "cy",
+   "t": 2.4,
+   "min": 810,
+   "max": 830
+  }
+ ],
+ "shots": [
+  0.0,
+  0.343,
+  0.686,
+  1.029,
+  1.371,
+  1.714,
+  2.057,
+  2.4
+ ],
+ "pixels": {},
+ "oscillate": []
+}

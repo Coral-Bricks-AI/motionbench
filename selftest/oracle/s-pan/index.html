@@ -1,0 +1,20 @@
+<!doctype html><html><head><meta charset="utf-8"><style>
+@font-face{font-family:"Open Sauce Two";src:url(assets/fonts/OpenSauceTwo-Regular.ttf);font-weight:400}
+@font-face{font-family:"Open Sauce Two";src:url(assets/fonts/OpenSauceTwo-SemiBold.ttf);font-weight:600}
+@font-face{font-family:"Open Sauce Two";src:url(assets/fonts/OpenSauceTwo-Bold.ttf);font-weight:700}
+@font-face{font-family:"JetBrains Mono";src:url(assets/fonts/JetBrainsMono-Regular.woff2);font-weight:400}
+html,body{margin:0;width:1920px;height:1080px;overflow:hidden;background:#F9F9FA}
+#stage{position:absolute;inset:0;width:1920px;height:1080px;overflow:hidden;background:#F9F9FA;font-family:"Open Sauce Two";color:#0A0C11}
+.abs{position:absolute}
+.card{background:#FDFDFD;border:2px solid #DDDFE4;border-radius:24px;box-sizing:border-box}
+.h{font-size:104px;font-weight:600;letter-spacing:-0.025em;white-space:nowrap}
+
+</style></head><body><div id="stage"><div class="abs" data-role="world" style="left:0;top:0;width:5760px;height:1080px;background:#F9F9FA"><div class="abs" style="left:0px;top:0;width:1920px;height:1080px;display:flex;align-items:center;justify-content:center"><span class="h" data-role="station-1">Request</span></div><div class="abs" style="left:1920px;top:0;width:1920px;height:1080px;display:flex;align-items:center;justify-content:center"><span class="h" data-role="station-2">Route</span></div><div class="abs" style="left:3840px;top:0;width:1920px;height:1080px;display:flex;align-items:center;justify-content:center"><span class="h" data-role="station-3">Reply</span></div></div></div>
+<script src="assets/gsap.min.js"></script>
+<script>(function(){
+const tl = gsap.timeline({paused:true});
+const w="[data-role=world]"; tl.to(w,{x:-1920,duration:1.2,ease:"expo.inOut"},1.2).to(w,{x:-3840,duration:1.2,ease:"expo.inOut"},3.6);
+tl.set({}, {}, 6.0);
+window.__timelines = window.__timelines || {};
+window.__timelines.main = tl;
+})();</script></body></html>

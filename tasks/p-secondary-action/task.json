@@ -1,0 +1,53 @@
+{
+ "id": "p-secondary-action",
+ "track": "principles",
+ "principle": "secondary action",
+ "duration": 3.0,
+ "fps": 60,
+ "roles": [
+  "card",
+  "tag"
+ ],
+ "checks": [
+  {
+   "type": "move",
+   "role": "card",
+   "key": "cx",
+   "ease_out": 0.35,
+   "name": "card"
+  },
+  {
+   "type": "at",
+   "role": "card",
+   "key": "cx",
+   "from": 1.7,
+   "to": 3.0,
+   "min": 950,
+   "max": 970
+  },
+  {
+   "type": "swing",
+   "card": "card",
+   "tag": "tag",
+   "amp": [
+    4,
+    45
+   ],
+   "settle_by": 3.0
+  }
+ ],
+ "shots": [
+  0.0,
+  0.429,
+  0.857,
+  1.286,
+  1.714,
+  2.143,
+  2.571,
+  3.0
+ ],
+ "pixels": {},
+ "oscillate": [
+  "tag"
+ ]
+}

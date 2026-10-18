@@ -1,0 +1,30 @@
+{
+ "id": "s-continuity",
+ "track": "studio",
+ "principle": "continuity",
+ "duration": 4.0,
+ "fps": 60,
+ "roles": [
+  "line",
+  "headline"
+ ],
+ "checks": [
+  {
+   "type": "continuity",
+   "line": "line",
+   "headline": "headline"
+  }
+ ],
+ "shots": [
+  0.0,
+  0.571,
+  1.143,
+  1.714,
+  2.286,
+  2.857,
+  3.429,
+  4.0
+ ],
+ "pixels": {},
+ "oscillate": []
+}

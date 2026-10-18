@@ -1,0 +1,38 @@
+{
+ "id": "s-beat",
+ "track": "studio",
+ "principle": "hits on the beat",
+ "duration": 3.0,
+ "fps": 60,
+ "roles": [
+  "word-1",
+  "word-2",
+  "word-3",
+  "word-4"
+ ],
+ "checks": [
+  {
+   "type": "beats",
+   "roles": [
+    "word-1",
+    "word-2",
+    "word-3",
+    "word-4"
+   ],
+   "bpm": 120,
+   "beat1": 0.5
+  }
+ ],
+ "shots": [
+  0.0,
+  0.429,
+  0.857,
+  1.286,
+  1.714,
+  2.143,
+  2.571,
+  3.0
+ ],
+ "pixels": {},
+ "oscillate": []
+}

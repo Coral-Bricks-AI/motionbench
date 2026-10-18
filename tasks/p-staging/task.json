@@ -1,0 +1,37 @@
+{
+ "id": "p-staging",
+ "track": "principles",
+ "principle": "staging and readability",
+ "duration": 6.0,
+ "fps": 60,
+ "roles": [
+  "line-1",
+  "line-2",
+  "line-3"
+ ],
+ "checks": [
+  {
+   "type": "holds",
+   "roles": [
+    "line-1",
+    "line-2",
+    "line-3"
+   ],
+   "hold": 1.0,
+   "overlap": 0.25,
+   "min_h": 70
+  }
+ ],
+ "shots": [
+  0.0,
+  0.857,
+  1.714,
+  2.571,
+  3.429,
+  4.286,
+  5.143,
+  6.0
+ ],
+ "pixels": {},
+ "oscillate": []
+}

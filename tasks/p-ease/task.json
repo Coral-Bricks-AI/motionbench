@@ -1,0 +1,73 @@
+{
+ "id": "p-ease",
+ "track": "principles",
+ "principle": "slow in and slow out",
+ "duration": 3.0,
+ "fps": 60,
+ "roles": [
+  "card"
+ ],
+ "checks": [
+  {
+   "type": "at",
+   "role": "card",
+   "key": "cx",
+   "from": 0,
+   "to": 0.45,
+   "min": 300,
+   "max": 340
+  },
+  {
+   "type": "still",
+   "role": "card",
+   "from": 0,
+   "to": 0.45
+  },
+  {
+   "type": "move",
+   "role": "card",
+   "key": "cx",
+   "start": [
+    0.45,
+    0.6
+   ],
+   "dur": [
+    0.6,
+    1.6
+   ],
+   "ease_in": 0.35,
+   "ease_out": 0.35,
+   "peak_mid": [
+    0.2,
+    0.8
+   ]
+  },
+  {
+   "type": "at",
+   "role": "card",
+   "key": "cx",
+   "from": 2.3,
+   "to": 3.0,
+   "min": 1580,
+   "max": 1620
+  },
+  {
+   "type": "still",
+   "role": "card",
+   "from": 2.3,
+   "to": 3.0
+  }
+ ],
+ "shots": [
+  0.0,
+  0.429,
+  0.857,
+  1.286,
+  1.714,
+  2.143,
+  2.571,
+  3.0
+ ],
+ "pixels": {},
+ "oscillate": []
+}

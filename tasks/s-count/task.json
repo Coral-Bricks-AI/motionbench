@@ -1,0 +1,33 @@
+{
+ "id": "s-count",
+ "track": "studio",
+ "principle": "stepped count",
+ "duration": 3.0,
+ "fps": 60,
+ "roles": [
+  "value"
+ ],
+ "checks": [
+  {
+   "type": "count",
+   "role": "value",
+   "start": 0.4,
+   "land": 2.0,
+   "to": 1284,
+   "mid": 0.6,
+   "min_h": 120
+  }
+ ],
+ "shots": [
+  0.0,
+  0.429,
+  0.857,
+  1.286,
+  1.714,
+  2.143,
+  2.571,
+  3.0
+ ],
+ "pixels": {},
+ "oscillate": []
+}

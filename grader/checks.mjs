@@ -827,6 +827,12 @@ export function contract(ctx, task) {
   const missing = task.roles.filter((r) => !ctx.frames.some((f) => f.roles[r]));
   const dup = task.roles.filter((r) => ctx.frames.some((f) => f.roles[r] && f.roles[r].dup));
   out.push(res("contract: every role is tagged, once", !missing.length && !dup.length, { missing, dup }, "all, unique"));
+  // Measured boxes are not enough: a role clipped away by an ancestor (an overflow-hidden box of zero width,
+  // say) moves as briefed and is never seen. Each must be shown at some moment: at least half its width and
+  // half its height on screen (half the frame's, for a strip wider or taller than the frame).
+  const onScreen = (r) => r && r.o >= 0.5 && (r.vw == null || (r.vw >= 0.5 * Math.min(r.w, 1920) && r.vh >= 0.5 * Math.min(r.h, 1080)));
+  const unseen = task.roles.filter((r) => !missing.includes(r) && !ctx.frames.some((f) => onScreen(f.roles[r])));
+  out.push(res("contract: every role is on screen at some point (not clipped away)", !unseen.length, unseen, "all"));
   out.push(res("contract: same picture whatever order it is seeked in", ctx.determinism.ok, ctx.determinism.worst, "roles exact; < 0.5% of pixels differ"));
   out.push(res("contract: a pure function of time (no clocks, randomness, loops or CSS animation)", !ctx.static.impure.length, ctx.static.impure, "none"));
   const effects = [];
@@ -848,14 +854,16 @@ export function contract(ctx, task) {
       const ok = task.palette === "neutral" ? Math.max(...v.c) - Math.min(...v.c) <= 14 : PALETTE.some((p) => near(v.c, p, 1));
       if (v && !ok && !off.some((o) => o[0] === c)) off.push([c, why[0]]);
     }
-  out.push(task.palette === "neutral"
+  if (task.palette === "any") off.length = 0;
+  out.push(task.palette === "any" ? res("colour: free choice", true, null, "any", ) : task.palette === "neutral"
     ? res("art direction: black, white and warm grays only", !off.length, off.slice(0, 4), "neutral colours")
     : res("brand: only the palette's colours", !off.length, off.slice(0, 4), "brand palette"));
   const fonts = new Set(), loaded = new Set();
   for (const s of ctx.scans) { Object.keys(s.fonts).forEach((f) => fonts.add(f.split(",")[0].replace(/["']/g, "").trim())); s.loaded.forEach((f) => loaded.add(f)); }
-  const allowed = task.fonts || ["Open Sauce Two", "JetBrains Mono"];
-  const badFont = [...fonts].map((f) => f.replace(/ \d+$/, "")).filter((f) => !allowed.includes(f) || !loaded.has(f));
-  out.push(res(`${task.fonts ? "art direction" : "brand"}: only ${allowed.join(" / ")}, loaded from the folder`, !badFont.length, [...new Set(badFont)], allowed.join(" / ")));
+  const allowed = task.fonts === "any" ? null : task.fonts || ["Open Sauce Two", "JetBrains Mono"];
+  // A free piece may use any font, but a web font it names must actually load (or the render machine substitutes).
+  const badFont = [...fonts].map((f) => f.replace(/ \d+$/, "")).filter((f) => (allowed ? !allowed.includes(f) || !loaded.has(f) : false));
+  out.push(allowed ? res(`${task.fonts ? "art direction" : "brand"}: only ${allowed.join(" / ")}, loaded from the folder`, !badFont.length, [...new Set(badFont)], allowed.join(" / ")) : res("type: free choice", true, null, "any"));
   const last = ctx.frames[ctx.frames.length - 1].roles;
   // Containers bigger than the frame (a world the camera moves over) are not text blocks.
   const unsafe = Object.entries(last).filter(([k, r]) => r.text && r.text.trim() && r.o > 0.5 && visibleAt(r) && r.w <= FRAME.W && r.h <= FRAME.H && !inSafe(r)).map(([k]) => k);
@@ -915,5 +923,9 @@ export function run(ctx, task) {
     try { got = fn(ctx, c); } catch (e) { got = [res(`${c.type}: could not be measured`, false, String(e.message || e).slice(0, 120), "measurable")]; }
     for (const r of got) out.push({ ...r, kind: "craft", principle: c.principle || task.principle });
   }
+  // A page that never shows any of its tagged elements measures nothing: its motion checks do not pass.
+  const seen = out.find((r) => r.id.startsWith("contract: every role is on screen"));
+  if (task.roles.length && seen && !seen.pass && seen.got.length === task.roles.length)
+    for (const r of out) if (r.kind === "craft" && r.pass) { r.pass = false; r.got = "nothing tagged is ever on screen"; }
   return out;
 }

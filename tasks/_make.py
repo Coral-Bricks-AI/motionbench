@@ -319,6 +319,20 @@ task("l-opendesign", "long", "a real user's brief, with a skill", 14.0, ["shape"
 ], pixels=dict(beats=dict(bpm=120), loop=True, surface=dict(t=[0.2, 7.0, 13.9], points=[[30, 30], [1890, 30], [30, 1050], [1890, 1050]], colour="#EDEDE8")),
    shots=[0, 1.5, 3, 4.5, 6, 7.5, 9, 10.5, 12, 13.99], extra=dict(od=True))
 
+
+FREE_BRIEF = """# The brief
+
+Make a motion graphic. Anything you like: it's yours. Show what you can do.
+
+---
+
+## For the review tool (added by motionbench)
+
+Deliver `index.html` as in `CONTRACT.md`: 1920×1080, between 10 and 30 seconds long. Nothing needs tagging. Fonts are in `assets/fonts/` if you want them; you don't have to use them.
+"""
+task("u-free", "free", "unguided", 20.0, [], FREE_BRIEF, [], extra=dict(free=True),
+     shots=[1, 3, 5, 7, 9, 11, 13, 15, 17, 19, 21, 23])
+
 def fix(d):
     if isinstance(d, dict): return {k.rstrip("_"): fix(v) for k, v in d.items()}
     if isinstance(d, list): return [fix(x) for x in d]
@@ -330,8 +344,12 @@ for id, t in T.items():
     extra = t.pop("extra")
     if extra.get("long"):
         t.update(duration_range=[40, 90], timeout=3600)
+    if extra.get("free"):
+        t.update(duration_range=[10, 30], timeout=3600, brand=False, fonts="any", palette="any", free=True,
+                 prompt=("Read BRIEF.md and CONTRACT.md in this folder, then make index.html. Check your work with the tools "
+                         "described in CONTRACT.md. When index.html is finished, stop."))
     if extra.get("od"):
-        t.update(timeout=3600, brand=False, fonts=["Geist"], palette="neutral",
+        t.update(timeout=3600, brand=False, fonts=["Geist"], palette="neutral", ui=True,
                  prompt=("Read BRIEF.md and CONTRACT.md in this folder. A motion skill is installed at skills/open-design-hyperframes/: "
                          "use it. Then make index.html as the brief asks. Check your work with the tools described in CONTRACT.md. "
                          "When index.html is finished, stop."))

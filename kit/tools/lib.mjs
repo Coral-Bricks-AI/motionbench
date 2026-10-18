@@ -19,6 +19,24 @@ const PAGE = () => {
     return o;
   };
   const shown = (el) => effOpacity(el) * (getComputedStyle(el).visibility === "hidden" ? 0 : 1);
+  // The part of an element's box left after clipping by the frame and by every overflow-clipping ancestor that
+  // contains it (CSS: an absolutely positioned box escapes an overflow ancestor that is not, or does not
+  // contain, its containing block). Returns the visible width and height.
+  const onScreen = (el) => {
+    const b = el.getBoundingClientRect();
+    let L = Math.max(b.left, 0), T = Math.max(b.top, 0), R = Math.min(b.right, innerWidth), B = Math.min(b.bottom, innerHeight);
+    const pos = (cs) => (cs.position === "absolute" ? "abs" : cs.position === "fixed" ? "fixed" : "flow");
+    let mode = pos(getComputedStyle(el));
+    for (let p = el.parentElement; p && p !== document.documentElement; p = p.parentElement) {
+      const cs = getComputedStyle(p), tf = cs.transform !== "none";
+      if (!(mode === "flow" || (mode === "abs" && (cs.position !== "static" || tf)) || (mode === "fixed" && tf))) continue;
+      const c = p.getBoundingClientRect();
+      if (cs.overflowX !== "visible") { L = Math.max(L, c.left); R = Math.min(R, c.right); }
+      if (cs.overflowY !== "visible") { T = Math.max(T, c.top); B = Math.min(B, c.bottom); }
+      mode = pos(cs);
+    }
+    return [Math.max(0, R - L), Math.max(0, B - T)];
+  };
   const rotation = (el) => {
     if (el instanceof SVGGraphicsElement) {
       const m = el.getScreenCTM();
@@ -74,9 +92,10 @@ const PAGE = () => {
         const b = el.getBoundingClientRect();
         const cs = getComputedStyle(el);
         const vt = visibleText(el);
+        const [vw, vh] = onScreen(el);
         out[name] = {
           x: round(b.left), y: round(b.top), w: round(b.width), h: round(b.height),
-          o: round(shown(el) * 1000) / 1000, rot: round(rotation(el)),
+          o: round(shown(el) * 1000) / 1000, rot: round(rotation(el)), vw: round(vw), vh: round(vh),
           text: vt.text, end: vt.end,
           color: cs.color, bg: cs.backgroundColor, fill: cs.fill, stroke: cs.stroke,
           font: cs.fontFamily, weight: cs.fontWeight,
@@ -127,6 +146,59 @@ const PAGE = () => {
     duration() {
       return window.__timelines.main.duration();
     },
+    // Every element on the page, tagged or not, for the polish and taste checks: an id per element, its
+    // parent's id and static facts (tag, own text, type settings), then compact per-frame boxes.
+    autoInit(max = 700) {
+      const els = [...document.querySelectorAll("body *")].filter((e) => !["SCRIPT", "STYLE", "TEMPLATE", "LINK", "META", "BR", "DEFS", "defs", "IFRAME"].includes(e.tagName));
+      window.__mbAuto = els.slice(0, max);
+      const idx = new Map(window.__mbAuto.map((e, i) => [e, i]));
+      return window.__mbAuto.map((e) => {
+        const cs = getComputedStyle(e);
+        const own = [...e.childNodes].filter((n) => n.nodeType === 3).map((n) => n.data).join("").trim();
+        let p = e.parentElement; while (p && !idx.has(p)) p = p.parentElement;
+        return { tag: e.tagName.toLowerCase(), parent: p ? idx.get(p) : -1, role: e.getAttribute("data-role") || null, svg: e instanceof SVGElement, text: own.slice(0, 200) };
+      });
+    },
+    auto() {
+      cache.clear();
+      const out = [];
+      window.__mbAuto.forEach((e, i) => {
+        const b = e.getBoundingClientRect();
+        const eo = shown(e);
+        if (eo <= 0.01 && !(b.width || b.height)) return;
+        const cs = getComputedStyle(e);
+        const own = e.childNodes.length && [...e.childNodes].some((n) => n.nodeType === 3 && n.data.trim()) ? [...e.childNodes].filter((n) => n.nodeType === 3).map((n) => n.data).join("").trim().slice(0, 120) : "";
+        out.push([i, round(b.left), round(b.top), round(b.width), round(b.height), Math.round(eo * 1000) / 1000, own,
+          own ? [parseFloat(cs.fontSize), cs.letterSpacing, cs.textTransform, cs.fontVariantNumeric, cs.fontFamily.split(",")[0].replace(/["']/g, "").trim(), e.scrollWidth > e.clientWidth + 1 && cs.overflow !== "visible" ? 1 : 0,
+            [...e.childNodes].filter((n) => n.nodeType === 3).map((n) => n.data).join("").trim().length] : null]);
+      });
+      return out;
+    },
+    // Characters a visible text is set in that its first font cannot draw (the browser falls back, a
+    // render machine may draw a box). A glyph is covered when its width does not change with the fallback.
+    // Each text is measured in its own style and weight, after that face has loaded: a canvas does not wait
+    // for a face it has not used yet, and would measure the fallback.
+    async glyphs() {
+      cache.clear();
+      const c = document.createElement("canvas").getContext("2d"), missing = {}, texts = [];
+      for (const e of document.querySelectorAll("body *")) {
+        const own = [...e.childNodes].filter((n) => n.nodeType === 3).map((n) => n.data).join("");
+        if (!own.trim() || shown(e) < 0.5) continue;
+        const cs = getComputedStyle(e), fam = cs.fontFamily.split(",")[0].trim();
+        texts.push({ fam, face: `${cs.fontStyle} ${cs.fontWeight} 40px`, chars: [...new Set(own.replace(/\s/g, ""))] });
+      }
+      await Promise.all([...new Set(texts.map((x) => `${x.face} ${x.fam}`))].map((f) => document.fonts.load(f).catch(() => 0)));
+      for (const { fam, face, chars } of texts) {
+        const name = fam.replace(/["']/g, "");
+        const w = (f, ch) => { c.font = `${face} ${f}`; return c.measureText(ch).width; };
+        for (const ch of chars) {
+          // Covered when the font changes the width against a bare fallback, under either fallback.
+          const covered = Math.abs(w(`${fam}, monospace`, ch) - w("monospace", ch)) > 0.01 || Math.abs(w(`${fam}, serif`, ch) - w("serif", ch)) > 0.01;
+          if (!covered) (missing[name] = missing[name] || new Set()).add(ch);
+        }
+      }
+      return Object.fromEntries(Object.entries(missing).map(([k, v]) => [k, [...v].join("")]));
+    },
   };
 };
 
@@ -163,6 +235,9 @@ export async function open(dir, { headless = true } = {}) {
     async seek(t) { await page.evaluate((t) => window.__mb.seek(t), t); },
     async roles(t) { return page.evaluate((t) => { window.__mb.seek(t); return window.__mb.roles(); }, t); },
     async scan(t) { return page.evaluate((t) => { window.__mb.seek(t); return window.__mb.scan(); }, t); },
+    async autoInit() { return page.evaluate(() => window.__mb.autoInit()); },
+    async auto(t) { return page.evaluate((t) => { window.__mb.seek(t); return window.__mb.auto(); }, t); },
+    async glyphs(t) { return page.evaluate((t) => { window.__mb.seek(t); return window.__mb.glyphs(); }, t); },
     async shot(t, { scale = 1 } = {}) {
       await page.evaluate((t) => window.__mb.seek(t), t);
       const buf = await page.screenshot({ type: "png" });

@@ -1,0 +1,29 @@
+<!doctype html><html><head><meta charset="utf-8"><style>
+@font-face{font-family:"Open Sauce Two";src:url(assets/fonts/OpenSauceTwo-Regular.ttf)}
+html,body{margin:0;width:1920px;height:1080px;overflow:hidden;background:#fff;font-family:"Open Sauce Two"}
+.a{position:absolute}
+</style></head><body>
+<div class="a" id="pop" style="left:800px;top:300px;width:200px;height:200px;background:#e33;transform:scale(0)"></div>
+<div class="a" id="flash" style="left:100px;top:100px;font-size:40px;opacity:0">BOOM</div>
+<div class="a" id="t1" style="left:400px;top:600px;font-size:60px">Overlapping</div>
+<div class="a" id="t2" style="left:420px;top:610px;font-size:60px">Words here</div>
+<div class="a" id="cut" style="left:1700px;top:200px;font-size:80px;white-space:nowrap">Cut off at the edge</div>
+<div class="a" id="toast" style="left:800px;top:900px;font-size:30px">Export ready</div>
+<div class="a" id="glyph" style="left:100px;top:900px;font-size:30px">Press ⏎ to go ⓐ</div>
+<div class="a" id="tiny" style="left:100px;top:1000px;font-size:9px">SHAPE · BAR</div>
+<div class="a" id="dots" style="left:100px;top:780px;font-size:30px">Loading...</div>
+<div class="a" id="num" style="left:1300px;top:600px;font-size:60px">0</div>
+<div class="a" id="slide" style="left:200px;top:450px;font-size:50px;opacity:0">Slides in fast at the end</div>
+<div class="a" id="para" style="left:100px;top:50px;width:1700px;font-size:20px">This is a very long paragraph line that keeps going and going well past any comfortable reading measure so that the reader has to travel across the whole screen to finish it at once.</div>
+</body>
+<script src="assets/gsap.min.js"></script><script>(function(){
+const tl=gsap.timeline({paused:true});
+tl.to("#pop",{scale:1,duration:0.5,ease:"power2.out"},0.5);
+tl.set("#flash",{opacity:1},2.0).set("#flash",{opacity:0},2.0334);
+tl.to("#slide",{opacity:1,duration:0.05},3).fromTo("#slide",{x:-600},{x:0,duration:0.8,ease:"power3.in",immediateRender:false},3);
+tl.to("#slide",{opacity:0,duration:1.2},5);
+const p={n:0}; tl.to(p,{n:999,duration:3,ease:"none",onUpdate:()=>{document.querySelector("#num").textContent=Math.round(p.n);}},1);
+tl.set("body",{opacity:0},7).set("body",{opacity:1},8.6);
+tl.set({}, {}, 12);
+window.__timelines={main:tl};
+})();</script></html>

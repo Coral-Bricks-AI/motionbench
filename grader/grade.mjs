@@ -6,6 +6,7 @@ import path from "node:path";
 import { createRequire } from "node:module";
 import { fileURLToPath } from "node:url";
 import { run, rgb } from "./checks.mjs";
+import { analyse } from "./polish.mjs";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const KIT = path.join(HERE, "..", "kit");
@@ -50,7 +51,7 @@ const assets = {};
 if (fs.existsSync(path.join(taskDir, "tokens.json"))) assets.tokens = JSON.parse(fs.readFileSync(path.join(taskDir, "tokens.json"), "utf8"));
 
 function fail(reason) {
-  const result = { task: task.id, score: 0, contract: 0, craft: 0, error: reason, checks: [], seconds: (Date.now() - started) / 1000 };
+  const result = { task: task.id, score: 0, contract: 0, craft: 0, polish: 0, taste: 0, error: reason, checks: [], seconds: (Date.now() - started) / 1000 };
   fs.writeFileSync(path.join(out, "result.json"), JSON.stringify(result, null, 1));
   console.log(`${task.id}: 0.000 (${reason})`);
   process.exit(0);
@@ -78,6 +79,21 @@ for (const s of scans)
     const coral = v.c[0] > 150 && v.c[0] - v.c[2] > 60 && v.c[1] < 140; // the coral ramp's saturated end
     if (coral) for (const w of whys) { const owner = w.split("@")[1] || "(none)"; if (!coralOwners.includes(owner)) coralOwners.push(owner); }
   }
+
+// 2b. Every element on the page at 30 fps, characters each font cannot draw, and blank frames: for the
+// polish and taste checks, which look at the whole piece rather than the tagged roles.
+const autoInfo = await m.autoInit();
+const autoFrames = [];
+for (let i = 0; i <= n; i += 2) autoFrames.push({ t: i / fps, els: await m.auto(Math.min(i / fps, task.duration - 1e-6)) });
+const glyphs = [];
+for (let t = 0.5; t < task.duration; t += 2) glyphs.push(await m.glyphs(t));
+const blank = [];
+for (let t = 0; t <= task.duration - 1e-6; t += 0.25) {
+  const png = shrink(PNG.sync.read(await m.shot(t)), 0.125), d = png.data, counts = new Map();
+  for (let k = 0; k < d.length; k += 4) { const key = (d[k] >> 3) << 10 | (d[k + 1] >> 3) << 5 | (d[k + 2] >> 3); counts.set(key, (counts.get(key) || 0) + 1); }
+  const mode = Math.max(...counts.values());
+  blank.push({ t, blank: 1 - mode / (d.length / 4) < 0.002 });
+}
 
 // 3. Pixels, for the checks that can only be seen.
 const px = {};
@@ -230,12 +246,18 @@ fs.writeFileSync(path.join(out, "sheet.png"), sheet(shotBufs, { cols: Math.min(4
 
 const ctx = { frames, scans, fps, duration, log, static: staticInfo, assets, pixels: px, coralOwners, determinism: { ok: worst <= 0.005 && !roleDrift.length, worst: { pixels: worst, roles: roleDrift.slice(0, 3) } } };
 const checks = run(ctx, task);
-const share = (k) => { const c = checks.filter((x) => !k || x.kind === k); return c.length ? c.filter((x) => x.pass).length / c.length : 0; };
+const loadedFonts = [...new Set(scans.flatMap((s) => s.loaded))];
+const pol = analyse({ info: autoInfo, frames: autoFrames, fps: fps / 2, glyphs, blank, loaded: loadedFonts, task });
+for (const c of pol.checks) checks.push(c);
+// The score and its parts count the task's own checks; polish and taste are reported beside it.
+const share = (k) => { const c = checks.filter((x) => (k ? x.kind === k : x.kind === "contract" || x.kind === "craft")); return c.length ? c.filter((x) => x.pass).length / c.length : 0; };
 const result = {
   task: task.id, track: task.track, score: share(), contract: share("contract"), craft: share("craft"),
-  passed: checks.filter((c) => c.pass).length, total: checks.length, checks, seconds: (Date.now() - started) / 1000,
+  polish: pol.polish, taste: pol.taste, motion_counts: pol.counts,
+  passed: checks.filter((c) => c.pass && (c.kind === "contract" || c.kind === "craft")).length, total: checks.filter((c) => c.kind === "contract" || c.kind === "craft").length,
+  checks, seconds: (Date.now() - started) / 1000,
 };
 fs.writeFileSync(path.join(out, "result.json"), JSON.stringify(result, null, 1));
 fs.writeFileSync(path.join(out, "measure.json"), JSON.stringify({ frames, scans, pixels: px }));
-console.log(`${task.id}: ${result.score.toFixed(3)} (${result.passed}/${result.total}; craft ${result.craft.toFixed(2)}, contract ${result.contract.toFixed(2)})`);
+console.log(`${task.id}: ${result.score.toFixed(3)} (${result.passed}/${result.total}; craft ${result.craft.toFixed(2)}, contract ${result.contract.toFixed(2)}; polish ${pol.polish.toFixed(2)}, taste ${pol.taste == null ? "n/a" : pol.taste.toFixed(2)})`);
 if (process.argv.includes("--verbose")) for (const c of checks) console.log(`  ${c.pass ? "✓" : "✗"} ${c.id}  got=${JSON.stringify(c.got)}`);

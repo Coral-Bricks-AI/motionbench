@@ -1,0 +1,35 @@
+{
+ "id": "u-free",
+ "track": "free",
+ "principle": "unguided",
+ "duration": 20.0,
+ "fps": 60,
+ "roles": [],
+ "checks": [],
+ "shots": [
+  1,
+  3,
+  5,
+  7,
+  9,
+  11,
+  13,
+  15,
+  17,
+  19,
+  21,
+  23
+ ],
+ "pixels": {},
+ "oscillate": [],
+ "duration_range": [
+  10,
+  30
+ ],
+ "timeout": 3600,
+ "brand": false,
+ "fonts": "any",
+ "palette": "any",
+ "free": true,
+ "prompt": "Read BRIEF.md and CONTRACT.md in this folder, then make index.html. Check your work with the tools described in CONTRACT.md. When index.html is finished, stop."
+}

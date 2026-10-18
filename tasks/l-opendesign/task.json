@@ -86,5 +86,6 @@
   "Geist"
  ],
  "palette": "neutral",
+ "ui": true,
  "prompt": "Read BRIEF.md and CONTRACT.md in this folder. A motion skill is installed at skills/open-design-hyperframes/: use it. Then make index.html as the brief asks. Check your work with the tools described in CONTRACT.md. When index.html is finished, stop."
 }

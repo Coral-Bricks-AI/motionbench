@@ -11,14 +11,14 @@ and run records): **[huggingface.co/datasets/coral-bricks-ai/motionbench](https:
 
 | Model | Harness | **Score** (95% CI) | Launch film | Open Design | 16 tasks | Cost/task | Out tokens | Steps | Minutes |
 |---|---|---|---|---|---|---|---|---|---|
-| GPT-6.1 Sol | Codex CLI | **0.931** (0.911–0.950) | 0.890 | 0.967 | 0.981 | $0.123 | 5,015 | 10 | 2.0 |
-| GLM-5.3 | Claude Code | **0.919** (0.907–0.929) | 0.862 | 1.000 | 0.939 | $0.240 | 25,164 | 19 | 3.0 |
-| Claude Opus 5.5 | Claude Code | **0.913** (0.883–0.943) | 0.890 | 0.900 | 0.987 | $0.512 | 11,942 | 12 | 2.5 |
-| Grok 4.7 | Claude Code | **0.888** (0.866–0.907) | 0.817 | 0.967 | 0.946 | $0.714 | 12,865 | 41 | 7.7 |
-| Claude Haiku 5.5 | Claude Code | **0.879** (0.850–0.906) | 0.874 | 0.867 | 0.911 | $0.027 | 28,800 | 14 | 2.6 |
-| Claude Sonnet 5.5 | Claude Code | **0.877** (0.856–0.901) | 0.817 | 0.933 | 0.945 | $0.281 | 14,530 | 12 | 2.2 |
-| DeepSeek V4.1 Flash | Claude Code | **0.865** (0.843–0.887) | 0.843 | 0.833 | 0.968 | $0.066 | 41,264 | 36 | 6.8 |
-| DeepSeek V4.1 Flash, no reasoning | Claude Code | **0.830** (0.754–0.886) | 0.785 | 0.933 | 0.790 | $0.037 | 18,345 | 49 | 5.7 |
+| GPT-6.1 Sol | Codex CLI | **0.931** (0.911–0.950) | 0.890 | 0.967 | 0.981 | $0.130 | 5,380 | 10 | 2.1 |
+| GLM-5.3 | Claude Code | **0.919** (0.907–0.929) | 0.862 | 1.000 | 0.939 | $0.262 | 26,520 | 20 | 3.1 |
+| Claude Opus 5.5 | Claude Code | **0.913** (0.883–0.943) | 0.890 | 0.900 | 0.987 | $0.559 | 13,120 | 13 | 2.8 |
+| Grok 4.7 | Claude Code | **0.884** (0.861–0.904) | 0.817 | 0.967 | 0.925 | $0.762 | 13,555 | 44 | 8.0 |
+| Claude Haiku 5.5 | Claude Code | **0.879** (0.850–0.906) | 0.874 | 0.867 | 0.911 | $0.027 | 28,541 | 14 | 2.6 |
+| Claude Sonnet 5.5 | Claude Code | **0.877** (0.856–0.901) | 0.817 | 0.933 | 0.945 | $0.281 | 14,633 | 12 | 2.3 |
+| DeepSeek V4.1 Flash | Claude Code | **0.865** (0.843–0.887) | 0.843 | 0.833 | 0.968 | $0.071 | 43,836 | 38 | 7.7 |
+| DeepSeek V4.1 Flash, no reasoning | Claude Code | **0.830** (0.754–0.886) | 0.785 | 0.933 | 0.790 | $0.043 | 21,802 | 50 | 6.3 |
 
 Score = 50% the launch film (a founder's plain-words brief) + 30% Open Design's one-shape brief + 20% the 16 short tasks, each the share of its motion checks passed (3 attempts). The interval resamples tasks and attempts.
 
@@ -36,6 +36,35 @@ Craft = share of each task's own motion checks passed, averaged over tasks; 95% 
 | `l-opendesign` | 30% | The starter prompt of Open Design's "One-Shape UI Motion" example ([nexu-io/open-design](https://github.com/nexu-io/open-design), Apache-2.0), verbatim, with Open Design's motion skill (`design-templates/hyperframes`) installed in the workspace and its Geist fonts. Checked: one shape on screen throughout and never cut, at least 10 forms, the cursor on the shape when each change begins, a tiny overshoot on at least 85% of changes (the brief's slider stretches on purpose), pixels moving on every beat at 120 BPM, the last frame equal to the first, black/white/warm-gray only, Geist only. |
 
 The sixteen short tasks below make up the other 20%.
+
+**One unguided piece** (`u-free`): "Make a motion graphic. Anything you like: it's yours. Show what you can do."
+No brand, no brief, 10–30 seconds, the same toolkit. It has no task checks; it is read for polish and taste
+(below), reported for how easily each model gets a working piece (working runs, minutes, tool calls), and it
+goes into the blind vote.
+
+**Polish and taste, on every run** (`grader/polish.mjs`), over every element on the page, tagged or not,
+sampled at 30 fps. Reported beside the score, not inside it.
+
+- Polish (a share of seven glitch checks): no tooling words on screen (export, render, MP4, fps or BPM
+  counters, undefined…), nothing that flashes for one or two frames, no text sitting on other text for 0.3 s or
+  more, no text cut off at rest by the frame or its box, every character present in its font (measured by
+  canvas widths against bare fallbacks, in the text's own weight once its face has loaded), no empty screen of a second or more between the first and last thing
+  shown, no text under 12 px held on screen.
+- Taste (the mean of the rules that apply): Emil Kowalski's written rules
+  ([7 Practical Animation Tips](https://emilkowal.ski/ui/7-practical-animation-tips),
+  [You Don't Need Animations](https://emilkowal.ski/ui/you-dont-need-animations),
+  [Agents with Taste](https://emilkowal.ski/ui/agents-with-taste)): scale-ins start at half size or more
+  (his number is 0.9), entrances do not speed up into place, exits are no slower than entrances, UI changes
+  stay within 400 ms (his 300) on the UI brief, the ellipsis character, tracked-out capitals, tabular figures
+  for numbers that change, lines near 65 characters.
+
+**The blind vote** (motionbench.sh/vote): two models' versions of the same long or free piece, unnamed, side by
+side on one clock; names revealed after the vote; a vote within 8 s of the pair is not counted. The votes
+become Elo ratings (Bradley–Terry strengths on Elo's scale: 1000 the average model, 400 points ten-to-one
+odds) with 95% intervals from resampling the votes. The site's **overall** is 70% the invited panel's vote and
+30% the checks, both as the chance of beating an average other model (preferred in the vote; on the checks, the
+score coming out higher when both models' runs are resampled). Open votes
+are recorded but do not count. It is preliminary until every model has 30 panel votes.
 
 **Principles** (eight of the twelve animation principles that can be measured on a 2D frame):
 
@@ -80,7 +109,7 @@ the CoralBricks mark, GSAP 3.15 and two tools: `tools/probe.mjs` prints exactly 
 (boxes, opacity, rotation, visible text, colours, effects) at chosen times, and `tools/snap.mjs` saves
 frames as PNGs. The checks and their thresholds are never in the workspace.
 
-Each run gets 30 minutes and effort high, and every harness runs inside the same macOS `sandbox-exec`
+Each short task gets 30 minutes (the long briefs and the free piece 60) and effort high, and every harness runs inside the same macOS `sandbox-exec`
 profile (`run.py: seatbelt()`): reads and writes only in the run's workspace and a throwaway harness
 config (plus the toolchain, the kit and the headless browser), nothing else in the home folder or the
 shared temp folders, and network only to localhost, where `connect_proxy.py` tunnels to the model
@@ -165,6 +194,24 @@ After the first long-brief runs (same rule: every run re-graded, the self-test r
   not the prompt), and a dark drop shadow of any tint is allowed (its art direction asks for one).
 - Claude Code's per-reply output cap was raised from 32k to 64k tokens for every model after one GLM run ended
   on it (a 24k reasoning budget plus a whole page in one write); runs that ended on the cap were run again.
+
+After the first polish and taste pass (2026-10-19, every run re-graded):
+
+- Missing glyphs: the check measured every text at weight 400 and without waiting for its face to load, so a
+  page that declared a font only at other weights read as drawing every letter in a fallback (11 of 24
+  free runs failed it, all falsely). Each text is now measured in its own style and weight once that face has
+  loaded; the planted glitch (a character the font lacks) is still caught.
+- A new contract check: every tagged role is on screen at some moment (half its width and height visible,
+  or half the frame's for a strip wider than it), after clipping by the frame and by overflow-clipping
+  ancestors. One run (Grok, `s-rise` a3) had put each line in a zero-width `overflow: hidden` mask: its
+  measured boxes rose exactly as briefed and nothing was ever drawn, so it had passed every motion check. A page
+  that never shows any of its tagged elements now fails its motion checks too (only that run).
+- Grading moved from a Mac to Linux (`cloud_grade.py`, Modal, Playwright's image with the same Chromium
+  build), which is what a render machine runs. 437 of 456 runs grade identically. The rest: Geist lacks ⌘,
+  ↵, ↑, ↓ and arrows, which macOS font fallback had hidden (13 more Open Design runs now fail "every character is
+  in its font", 15 in all); one page asked for `OpenSauceTwo-Semibold.ttf` (the file is `SemiBold`), which only a
+  case-insensitive Mac finds; one text overlap from a fallback glyph; two Grok runs that drifted on a fresh
+  load on the Mac do not on Linux.
 
 Kept as set, though a reader may disagree: `s-beat` scores when a word visibly *arrives* (within 3% of its
 travel), so an ease-out that ends on the beat lands early. The brief's own words ("arrives (finishes coming

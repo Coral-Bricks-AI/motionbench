@@ -1,0 +1,22 @@
+<!doctype html><html><head><meta charset="utf-8"><style>
+@font-face{font-family:"Open Sauce Two";src:url(assets/fonts/OpenSauceTwo-Regular.ttf)}
+@font-face{font-family:"JetBrains Mono";src:url(assets/fonts/JetBrainsMono-Regular.woff2)}
+html,body{margin:0;width:1920px;height:1080px;overflow:hidden;background:#fff;font-family:"Open Sauce Two"}
+.a{position:absolute}
+</style></head><body>
+<div class="a" id="card" style="left:800px;top:300px;width:200px;height:200px;background:#e33;opacity:0;transform:scale(0.95)"></div>
+<div class="a" id="t1" style="left:400px;top:600px;font-size:60px;opacity:0">One idea</div>
+<div class="a" id="lab" style="left:400px;top:700px;font-size:18px;letter-spacing:0.08em;opacity:0">LAUNCH NOTES</div>
+<div class="a" id="num" style="left:1300px;top:600px;font-size:60px;font-family:'JetBrains Mono'">0</div>
+<div class="a" id="wait" style="left:400px;top:800px;font-size:30px;opacity:0">Loading…</div>
+</body>
+<script src="assets/gsap.min.js"></script><script>(function(){
+const tl=gsap.timeline({paused:true});
+tl.to("#card",{opacity:1,scale:1,duration:0.4,ease:"power3.out"},0.5);
+tl.fromTo("#t1",{opacity:0,y:40},{opacity:1,y:0,duration:0.5,ease:"power3.out",immediateRender:false},1);
+tl.to("#lab",{opacity:1,duration:0.3,ease:"power2.out"},1.3).to("#wait",{opacity:1,duration:0.3},1.5);
+const p={n:0}; tl.to(p,{n:999,duration:3,ease:"power2.out",onUpdate:()=>{document.querySelector("#num").textContent=Math.round(p.n);}},1);
+tl.to("#t1",{opacity:0,y:-20,duration:0.3,ease:"power2.in"},6);
+tl.set({}, {}, 12);
+window.__timelines={main:tl};
+})();</script></html>

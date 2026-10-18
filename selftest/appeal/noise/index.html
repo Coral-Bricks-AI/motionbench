@@ -1,0 +1,15 @@
+<!doctype html><html><head><meta charset="utf-8"><style>
+html,body{margin:0;width:1920px;height:1080px;overflow:hidden;background:#111}
+i{position:absolute;width:24px;height:24px;background:#E8E4DA}
+</style></head><body>
+<!-- Noise: 300 squares that jump to a new place every frame, from a hash of the time (a pure function). -->
+<script src="assets/gsap.min.js"></script><script>
+const N = 300, els = [];
+for (let i = 0; i < N; i++) { const e = document.createElement("i"); document.body.appendChild(e); els.push(e); }
+const h = (a) => { a = (a ^ 61) ^ (a >>> 16); a = (a + (a << 3)) | 0; a ^= a >>> 4; a = Math.imul(a, 0x27d4eb2d); a ^= a >>> 15; return (a >>> 0) / 4294967296; };
+const draw = (t) => { const f = Math.floor(t * 30); els.forEach((e, i) => { e.style.left = Math.floor(h(f * 1009 + i * 7919) * 1880) + "px"; e.style.top = Math.floor(h(f * 2003 + i * 104729) * 1040) + "px"; }); };
+const p = { t: 0 }, tl = gsap.timeline({ paused: true });
+tl.to(p, { t: 20, duration: 20, ease: "none", onUpdate: () => draw(p.t) }, 0);
+draw(0);
+window.__timelines = { main: tl };
+</script></body></html>

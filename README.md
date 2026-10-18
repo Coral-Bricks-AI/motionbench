@@ -1,6 +1,6 @@
 # motionbench
 
-Can a model animate? Sixteen short motion-graphics briefs, each built by a model as an HTML/GSAP
+Can a model animate, and is it good to watch? Two long briefs, a free piece and sixteen short motion-graphics briefs, each built by a model as an HTML/GSAP
 composition in an agent harness, then measured frame by frame and scored by code. No model judges
 anything.
 
@@ -9,18 +9,18 @@ and run records): **[huggingface.co/datasets/coral-bricks-ai/motionbench](https:
 
 ## Results (2026-10-18, 3 attempts per task)
 
-| Model | Harness | **Score** (95% CI) | Launch film | Open Design | 16 tasks | Cost/task | Out tokens | Steps | Minutes |
-|---|---|---|---|---|---|---|---|---|---|
-| GPT-6.1 Sol | Codex CLI | **0.931** (0.911–0.950) | 0.890 | 0.967 | 0.981 | $0.130 | 5,380 | 10 | 2.1 |
-| GLM-5.3 | Claude Code | **0.919** (0.907–0.929) | 0.862 | 1.000 | 0.939 | $0.262 | 26,520 | 20 | 3.1 |
-| Claude Opus 5.5 | Claude Code | **0.913** (0.883–0.943) | 0.890 | 0.900 | 0.987 | $0.559 | 13,120 | 13 | 2.8 |
-| Grok 4.7 | Claude Code | **0.884** (0.861–0.904) | 0.817 | 0.967 | 0.925 | $0.762 | 13,555 | 44 | 8.0 |
-| Claude Haiku 5.5 | Claude Code | **0.879** (0.850–0.906) | 0.874 | 0.867 | 0.911 | $0.027 | 28,541 | 14 | 2.6 |
-| Claude Sonnet 5.5 | Claude Code | **0.877** (0.856–0.901) | 0.817 | 0.933 | 0.945 | $0.281 | 14,633 | 12 | 2.3 |
-| DeepSeek V4.1 Flash | Claude Code | **0.865** (0.843–0.887) | 0.843 | 0.833 | 0.968 | $0.071 | 43,836 | 38 | 7.7 |
-| DeepSeek V4.1 Flash, no reasoning | Claude Code | **0.830** (0.754–0.886) | 0.785 | 0.933 | 0.790 | $0.043 | 21,802 | 50 | 6.3 |
+| Model | Harness | **Score** (95% CI) | Long briefs | Launch film | Open Design | Appeal | Cost/task | Out tokens | Steps | Minutes |
+|---|---|---|---|---|---|---|---|---|---|---|
+| Claude Opus 5.5 | Claude Code | **0.987** (0.969–1.000) | 0.894 | 0.890 | 0.900 | 0.728 | $0.559 | 13,120 | 13 | 2.8 |
+| GPT-6.1 Sol | Codex CLI | **0.981** (0.956–1.000) | 0.919 | 0.890 | 0.967 | 0.751 | $0.130 | 5,380 | 10 | 2.1 |
+| DeepSeek V4.1 Flash | Claude Code | **0.968** (0.944–0.988) | 0.839 | 0.843 | 0.833 | 0.703 | $0.071 | 43,836 | 38 | 7.7 |
+| Claude Sonnet 5.5 | Claude Code | **0.945** (0.906–0.978) | 0.861 | 0.817 | 0.933 | 0.716 | $0.281 | 14,633 | 12 | 2.3 |
+| GLM-5.3 | Claude Code | **0.939** (0.901–0.972) | 0.914 | 0.862 | 1.000 | 0.699 | $0.262 | 26,520 | 20 | 3.1 |
+| Grok 4.7 | Claude Code | **0.925** (0.873–0.970) | 0.873 | 0.817 | 0.967 | 0.676 | $0.762 | 13,555 | 44 | 8.0 |
+| Claude Haiku 5.5 | Claude Code | **0.911** (0.862–0.956) | 0.871 | 0.874 | 0.867 | 0.738 | $0.027 | 28,541 | 14 | 2.6 |
+| DeepSeek V4.1 Flash, no reasoning | Claude Code | **0.790** (0.726–0.854) | 0.841 | 0.785 | 0.933 | 0.750 | $0.043 | 21,802 | 50 | 6.3 |
 
-Score = 50% the launch film (a founder's plain-words brief) + 30% Open Design's one-shape brief + 20% the 16 short tasks, each the share of its motion checks passed (3 attempts). The interval resamples tasks and attempts.
+Score = the sixteen short tasks: the share of each task's motion checks passed, averaged over tasks (3 attempts each); the interval resamples tasks. Long briefs = 62.5% the launch film (a founder's plain-words brief) + 37.5% Open Design's one-shape brief, by their checks. Appeal = how enjoyable the motion is to watch, read from the frames of the long briefs and the free piece (unweighted).
 
 Cost/task = each run's tokens at the provider's list price (CoralBricks standard plan for DeepSeek and GLM), averaged; the Claude and GPT runs actually used subscriptions. Steps = tool calls. Minutes = wall time in the harness.
 
@@ -28,7 +28,32 @@ Craft = share of each task's own motion checks passed, averaged over tasks; 95% 
 
 ## What it tests
 
-**Two long briefs** (80% of the score):
+**The score** is the sixteen short tasks: the share of each task's motion checks passed, averaged over tasks
+and three attempts. Beside it, unweighted: the long briefs' checks (launch film 5 : Open Design 3),
+**appeal** (how enjoyable the motion is to watch, below), polish and taste. The site's overall is 70% the
+blind panel vote + 30% this score, shown (with the vote's Elo) once every model has 30 panel votes.
+
+**Appeal** (`grader/appeal.mjs`), on the launch film, the Open Design piece and the free piece, read from the
+rendered frames at 30 fps (so canvas, SVG and HTML pieces are read alike) by optical flow on a quarter-size
+picture. Six parts, each 0–1, averaged; each comes from what perception and aesthetics research finds people
+enjoy in moving images:
+
+| Part | Finding | Measured as | Full marks |
+|---|---|---|---|
+| alive | Attention fades on an unchanging screen (habituation) | share of seconds with something changing | ≥ 70% of seconds |
+| continuity | Good continuation and processing fluency: things that move or transform are easier and nicer to follow than things that are swapped | share of changed picture carried by coherent motion or hard-edged reshaping (a morph, a reveal, typing), against fades and cuts | ≥ 50% |
+| smooth | Smooth motion is liked, abrupt motion disliked (apparent-motion studies; jerk) | share of moving regions whose velocity changes by less than 35% of their speed (or 1.5 px) from one frame to the next | ≥ 80% |
+| complexity | Berlyne's inverted U: interest peaks at moderate complexity | independent coherent motions on screen at once, 2–4 best, falling off below and above; times the share of motion that is coherent (noise counts for nothing) | 2–4 motions, all coherent |
+| variety | Novelty against habituation | kinds of change used, each ≥ 5% of active seconds: slide, scale, rotate, several motions at once, reshape, wipe, fade, cut | 4 kinds |
+| pacing | Cutting, DeLong & Nothelfer (2010): popular films' rhythms fluctuate as 1/f, matching attention | slope of the motion-energy spectrum, 0.1–3 Hz; 1/f scores 1, white noise or a drone 0 | slope −1 |
+
+It was set and checked before any model's appeal was computed, on five pages: the two long briefs' reference
+compositions (0.730, 0.702), a lone spinning shape (0.414), 300 squares jumping at random (0.282) and a
+six-slide crossfading slideshow (0.221) (`selftest/appeal/`). Two corrections were made on those pages and
+none after: abruptness is relative to speed (an expo ease is not abrupt), and hard-edged change in place
+(a morph) is not a fade. The blind vote is the test of whether appeal predicts what people prefer.
+
+**Two long briefs** (the Long column):
 
 | Task | Weight | What it is |
 |---|---|---|
@@ -157,6 +182,18 @@ proportional count, a crossfade, moves that start on the beat, a redrawn mark, a
 each loses its task's craft checks and keeps a full contract score. `selftest/broken/` checks that the
 contract catches shake, randomness, glow and gradients, off-palette colours and a CDN dependency.
 
+## How the headline changed
+
+- 2026-10-15: the score was the sixteen short tasks.
+- 2026-10-18: the two long briefs were added and weighted 80% of the score (launch film 50%, Open Design
+  30%), short tasks 20%.
+- 2026-10-19: appeal was built and tried at 40% of the score; it barely separated the models (the weakest
+  configuration tied the best), so it is reported unweighted.
+- 2026-10-19: the score is the sixteen short tasks again, chosen as the most reliable measurement (one
+  technique per task, each grader proven on a reference and a naive solution, 48 runs per model, against six
+  runs per model on the long briefs with scene detection in between). Every other measure stays on the page.
+  This was decided after the results were seen; every earlier result is in the dataset's history.
+
 ## Checks changed after models ran (2026-10-18)
 
 The pass marks were set, and the self-test passed, before any model ran. Looking at the first model runs
@@ -219,10 +256,12 @@ in) exactly on the beat") lean the other way; most models ended an ease-out on t
 
 ## Limits
 
-- Four of the twelve principles are not here (exaggeration, solid drawing, appeal, straight-ahead vs
-  pose-to-pose): none has a measurement that would not be a matter of taste.
-- The checks measure what the motion does, not whether it is beautiful. A piece can pass every check
-  and still be dull; look at the contact sheets (`results/<model>/<task>/a<N>/sheet.png`).
+- Three of the twelve principles are not here (exaggeration, solid drawing, straight-ahead vs
+  pose-to-pose): none has a measurement that would not be a matter of taste. Appeal is measured as
+  watchability, not as character design.
+- The checks measure what the motion does, not whether it is beautiful. Appeal measures properties that
+  research links to enjoyment, which is still not a viewer: the blind panel vote is the test, and appeal
+  should be dropped or re-weighted if it does not predict the vote.
 - Harnesses differ: GPT runs in Codex, everything else in Claude Code, which is Anthropic's and tuned for
   Claude. The workspace, brief, tools and grading are identical.
 - macOS only as written (the sandbox is `sandbox-exec`).

@@ -1,0 +1,11 @@
+<!doctype html><html><head><meta charset="utf-8"><style>
+html,body{margin:0;width:1920px;height:1080px;overflow:hidden;background:#F7F6F3}
+#sq{position:absolute;left:810px;top:390px;width:300px;height:300px;background:#D44027;border-radius:24px}
+</style></head><body>
+<!-- One shape turning at a constant rate for 20 s. -->
+<div id="sq"></div>
+<script src="assets/gsap.min.js"></script><script>
+const tl = gsap.timeline({ paused: true });
+tl.to("#sq", { rotation: 1440, duration: 20, ease: "none" }, 0);
+window.__timelines = { main: tl };
+</script></body></html>

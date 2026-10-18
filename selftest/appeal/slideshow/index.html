@@ -1,0 +1,19 @@
+<!doctype html><html><head><meta charset="utf-8"><style>
+@font-face{font-family:"Geist";src:url("assets/fonts/geist-medium.ttf");font-weight:500}
+html,body{margin:0;width:1920px;height:1080px;overflow:hidden;background:#F7F6F3;font-family:"Geist"}
+.s{position:absolute;inset:0;padding:260px 200px;opacity:0;color:#111}
+.s h1{font-size:120px;margin:0 0 40px;font-weight:500}.s p{font-size:44px;margin:0;color:#555;max-width:1300px}
+</style></head><body>
+<!-- A slideshow: six still slides, a 0.4 s crossfade between each, held 3 s. -->
+<div class="s" id="s0"><h1>Fast inference</h1><p>Every model, one endpoint, priced per token.</p></div>
+<div class="s" id="s1"><h1>Real speed</h1><p>Hundreds of tokens a second on the models people use.</p></div>
+<div class="s" id="s2"><h1>No cold starts</h1><p>The first request is as fast as the hundredth.</p></div>
+<div class="s" id="s3"><h1>Any harness</h1><p>Claude Code, Codex, OpenCode and the rest.</p></div>
+<div class="s" id="s4"><h1>Honest pricing</h1><p>One rate card, no surprises at the end of the month.</p></div>
+<div class="s" id="s5"><h1>Start today</h1><p>Twenty dollars of credit to try it.</p></div>
+<script src="assets/gsap.min.js"></script><script>
+const tl = gsap.timeline({ paused: true });
+for (let i = 0; i < 6; i++) { tl.to("#s" + i, { opacity: 1, duration: 0.4, ease: "none" }, i * 3.4); if (i < 5) tl.to("#s" + i, { opacity: 0, duration: 0.4, ease: "none" }, i * 3.4 + 3.4); }
+tl.set({}, {}, 20.4);
+window.__timelines = { main: tl };
+</script></body></html>

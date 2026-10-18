@@ -36,10 +36,15 @@ def grade(key: str, task: str, html: str) -> dict:
 
 
 @app.local_entrypoint()
-def main(tasks: str = "", selftest: bool = False):
+def main(tasks: str = "", selftest: bool = False, probe: bool = False):
     only = [t for t in tasks.split(",") if t]
     jobs = []  # (local folder to write into, task, html)
-    if selftest:
+    if probe:  # the appeal test pages, graded as free pieces, and the two long oracles
+        for name in sorted(os.listdir(os.path.join(ROOT, "selftest", "appeal"))):
+            jobs.append((os.path.join(ROOT, "selftest", "out", "appeal", name), "u-free", os.path.join(ROOT, "selftest", "appeal", name, "index.html")))
+        for t in ("l-launch", "l-opendesign"):
+            jobs.append((os.path.join(ROOT, "selftest", "out", "oracle", t), t, os.path.join(ROOT, "selftest", "oracle", t, "index.html")))
+    elif selftest:
         for kind in ("oracle", "naive"):
             for t in sorted(os.listdir(os.path.join(ROOT, "selftest", kind))):
                 if not only or t in only:
@@ -63,5 +68,5 @@ def main(tasks: str = "", selftest: bool = False):
             open(os.path.join(d, "sheet.png"), "wb").write(r["sheet"])
         done += 1
         g = json.loads(r["result"])
-        print(f"{os.path.relpath(d, ROOT):44} {g['score']:.3f}  contract {g['contract']:.2f}", flush=True)
+        print(f"{os.path.relpath(d, ROOT):44} {g['score']:.3f}  contract {g['contract']:.2f}" + (f"  appeal {g['appeal']:.3f} {json.dumps(g['appeal_parts'])} {json.dumps(g['appeal_measured'])}" if g.get("appeal") is not None else ""), flush=True)
     print(f"done {done}, errors {errors}", flush=True)

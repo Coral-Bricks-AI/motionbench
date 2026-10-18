@@ -7,6 +7,7 @@ import { createRequire } from "node:module";
 import { fileURLToPath } from "node:url";
 import { run, rgb } from "./checks.mjs";
 import { analyse } from "./polish.mjs";
+import * as appeal from "./appeal.mjs";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const KIT = path.join(HERE, "..", "kit");
@@ -51,7 +52,7 @@ const assets = {};
 if (fs.existsSync(path.join(taskDir, "tokens.json"))) assets.tokens = JSON.parse(fs.readFileSync(path.join(taskDir, "tokens.json"), "utf8"));
 
 function fail(reason) {
-  const result = { task: task.id, score: 0, contract: 0, craft: 0, polish: 0, taste: 0, error: reason, checks: [], seconds: (Date.now() - started) / 1000 };
+  const result = { task: task.id, score: 0, contract: 0, craft: 0, polish: 0, taste: 0, appeal: task.track === "long" || task.track === "free" ? 0 : null, error: reason, checks: [], seconds: (Date.now() - started) / 1000 };
   fs.writeFileSync(path.join(out, "result.json"), JSON.stringify(result, null, 1));
   console.log(`${task.id}: 0.000 (${reason})`);
   process.exit(0);
@@ -231,6 +232,8 @@ for (const k of order) {
 }
 const shotBufs = [];
 for (const t of task.shots || [0, task.duration / 2, task.duration - 1e-6]) shotBufs.push(await m.shot(Math.min(t, task.duration - 1e-6)));
+// Appeal, on the pieces with creative room (the long briefs and the free piece), over the whole timeline.
+const app = task.track === "long" || task.track === "free" ? appeal.analyse(await appeal.capture(m, m.duration, (b) => PNG.sync.read(b))) : null;
 const duration = m.duration, log = m.log;
 await m.close();
 for (const k of [6, 1]) {
@@ -254,10 +257,11 @@ const share = (k) => { const c = checks.filter((x) => (k ? x.kind === k : x.kind
 const result = {
   task: task.id, track: task.track, score: share(), contract: share("contract"), craft: share("craft"),
   polish: pol.polish, taste: pol.taste, motion_counts: pol.counts,
+  appeal: app ? app.appeal : null, appeal_parts: app ? app.parts : null, appeal_measured: app ? app.measured : null,
   passed: checks.filter((c) => c.pass && (c.kind === "contract" || c.kind === "craft")).length, total: checks.filter((c) => c.kind === "contract" || c.kind === "craft").length,
   checks, seconds: (Date.now() - started) / 1000,
 };
 fs.writeFileSync(path.join(out, "result.json"), JSON.stringify(result, null, 1));
 fs.writeFileSync(path.join(out, "measure.json"), JSON.stringify({ frames, scans, pixels: px }));
-console.log(`${task.id}: ${result.score.toFixed(3)} (${result.passed}/${result.total}; craft ${result.craft.toFixed(2)}, contract ${result.contract.toFixed(2)}; polish ${pol.polish.toFixed(2)}, taste ${pol.taste == null ? "n/a" : pol.taste.toFixed(2)})`);
+console.log(`${task.id}: ${result.score.toFixed(3)} (${result.passed}/${result.total}; craft ${result.craft.toFixed(2)}, contract ${result.contract.toFixed(2)}; polish ${pol.polish.toFixed(2)}, taste ${pol.taste == null ? "n/a" : pol.taste.toFixed(2)}${app ? `, appeal ${app.appeal.toFixed(2)}` : ""})`);
 if (process.argv.includes("--verbose")) for (const c of checks) console.log(`  ${c.pass ? "✓" : "✗"} ${c.id}  got=${JSON.stringify(c.got)}`);

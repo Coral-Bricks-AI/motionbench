@@ -57,6 +57,13 @@ class NarrationRender(unittest.TestCase):
         check = next(c for c in r["checks"] if c["id"].startswith("narration: source stays"))
         self.assertFalse(check["pass"])
 
+    def test_visible_text_outside_safe_frame_fails(self):
+        html = (ROOT / "selftest/oracle/_spoken-stat/index.html").read_text(encoding="utf-8")
+        html = html.replace('</style>', '[data-role="source"]{position:absolute;left:1500px;width:1px;white-space:nowrap;overflow:visible}</style>')
+        r = grade(html)
+        check = next(c for c in r["checks"] if c["id"].startswith("narration: source stays"))
+        self.assertFalse(check["pass"])
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)

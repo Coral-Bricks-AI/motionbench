@@ -53,12 +53,20 @@ const PAGE = () => {
     return (Math.atan2(m.b, m.a) * 180) / Math.PI;
   };
   const visibleText = (el) => {
-    let s = "", last = null;
+    let s = "", last = null, bounds = null;
     const w = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
     for (let n; (n = w.nextNode()); ) {
       const p = n.parentElement;
       if (!p || shown(p) < 0.5) continue;
       s += n.data;
+      if (n.data.trim()) {
+        const range = document.createRange();
+        range.selectNodeContents(n);
+        for (const b of range.getClientRects()) if (b.width > 0 && b.height > 0) {
+          bounds = bounds ? [Math.min(bounds[0], b.left), Math.min(bounds[1], b.top),
+            Math.max(bounds[2], b.right), Math.max(bounds[3], b.bottom)] : [b.left, b.top, b.right, b.bottom];
+        }
+      }
       if (n.data.trim()) last = n;
     }
     let end = null;
@@ -70,7 +78,8 @@ const PAGE = () => {
       const b = r.getBoundingClientRect();
       end = [b.left, b.top, b.width, b.height].map((v) => Math.round(v * 100) / 100);
     }
-    return { text: s, end };
+    return { text: s, end, bounds: bounds ?
+      [bounds[0], bounds[1], bounds[2] - bounds[0], bounds[3] - bounds[1]].map((v) => Math.round(v * 100) / 100) : null };
   };
   const round = (v) => Math.round(v * 100) / 100;
   window.__mb = {
@@ -97,7 +106,7 @@ const PAGE = () => {
         out[name] = {
           x: round(b.left), y: round(b.top), w: round(b.width), h: round(b.height),
           o: round(shown(el) * 1000) / 1000, rot: round(rotation(el)), vw: round(vw), vh: round(vh),
-          text: vt.text, end: vt.end,
+          text: vt.text, end: vt.end, textBounds: vt.bounds,
           textFits: el instanceof HTMLElement ?
             (cs.overflowX === "visible" || el.scrollWidth <= el.clientWidth + 1) &&
             (cs.overflowY === "visible" || el.scrollHeight <= el.clientHeight + 1) : null,

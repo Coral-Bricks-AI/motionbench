@@ -1,9 +1,12 @@
 // Timecoded narration fixtures test synchronization, not ASR or the truth of a claim.
 // Each role has to remain fully shown: a tagged box behind a clip is not readable.
+const textBox = (r) => r?.textBounds && {x: r.textBounds[0], y: r.textBounds[1], w: r.textBounds[2], h: r.textBounds[3]};
+const inside = (b) => b && [b.x, b.y, b.w, b.h].every(Number.isFinite) && b.w > 0 && b.h > 0 &&
+  b.x >= 96 && b.y >= 54 && b.x + b.w <= 1824 && b.y + b.h <= 1026;
 const safe = (r, minHeight) => r && r.o >= 0.98 && r.h >= minHeight && r.w > 0 &&
   [r.x, r.y, r.w, r.h, r.o].every(Number.isFinite) &&
   r.x >= 96 && r.y >= 54 && r.x + r.w <= 1824 && r.y + r.h <= 1026 &&
-  r.vw >= r.w - 0.5 && r.vh >= r.h - 0.5 && r.textFits === true;
+  r.vw >= r.w - 0.5 && r.vh >= r.h - 0.5 && r.textFits === true && inside(textBox(r));
 const normalized = (s) => String(s ?? '').replace(/\s+/g, ' ').trim();
 const overlaps = (a, b) => Math.min(a.x + a.w, b.x + b.w) - Math.max(a.x, b.x) > 0.5 &&
   Math.min(a.y + a.h, b.y + b.h) - Math.max(a.y, b.y) > 0.5;
@@ -13,9 +16,9 @@ export function narratedStat(ctx, p) {
   const frames = ctx.frames;
   const held = frames.filter((f) => f.t >= p.cue && f.t <= p.hold_to);
   // grade.mjs rounds sample times to four decimals.
-  const complete = held.length > 0 && held[0].t - p.cue <= 1 / ctx.fps + 1e-4 &&
-    p.hold_to - held.at(-1).t <= 1 / ctx.fps + 1e-4 &&
-    held.every((f, i) => !i || f.t - held[i - 1].t <= 1 / ctx.fps + 1e-4);
+  const complete = held.length > 0 && Math.abs(held[0].t - p.cue) <= 1e-4 &&
+    Math.abs(p.hold_to - held.at(-1).t) <= 1e-4 &&
+    held.every((f, i) => !i || f.t > held[i - 1].t && f.t - held[i - 1].t <= 1 / ctx.fps + 1e-4);
   const landed = frames.find((f) => {
     const r = f.roles[p.value];
     return r && r.o >= 0.5 && normalized(r.text) === p.target;
@@ -27,7 +30,7 @@ export function narratedStat(ctx, p) {
     result('final value stays readable through the hold', complete && held.every((f) => {
       const r = f.roles[p.value];
       return safe(r, p.value_min_h) &&
-        (f.t < p.cue + p.tolerance_frames / ctx.fps || normalized(r.text) === p.target);
+        (landed && f.t < landed.t || normalized(r.text) === p.target);
     }), held.length, `fully shown from ${p.cue}s to ${p.hold_to}s`)];
   for (const item of p.copy) {
     out.push(result(`${item.role} stays exact and readable through the hold`,
@@ -40,7 +43,10 @@ export function narratedStat(ctx, p) {
   out.push(result('value, qualifier and source never overlap during the hold',
     complete && held.every((f) => roles.every((role, i) => {
       const a = f.roles[role];
-      return a && roles.slice(i + 1).every((other) => f.roles[other] && !overlaps(a, f.roles[other]));
+      return a && textBox(a) && roles.slice(i + 1).every((other) => {
+        const b = f.roles[other];
+        return b && textBox(b) && !overlaps(a, b) && !overlaps(textBox(a), textBox(b));
+      });
     })), held.length, 'no intersecting role boxes'));
   return out;
 }

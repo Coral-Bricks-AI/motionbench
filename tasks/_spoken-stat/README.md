@@ -21,7 +21,7 @@ summary. The new `experimental` track is not a leaderboard claim.
 Checks reuse `count` and add `narrated_stat`: first visible final value within
 two frames of the cue, exact final value throughout the reading window, exact
 qualifier and source, minimum box heights, title-safe placement, no overflow
-clipping, and no overlap between the three roles. These are DOM measurements;
+clipping, text overflowing its own HTML box, and no overlap between the three roles. These are DOM measurements;
 they do not prove contrast, pixel visibility behind another layer, or whether
 the composition looks good. The existing polish pass and human viewing still
 matter. CSS clip paths are not modeled by the role probe.

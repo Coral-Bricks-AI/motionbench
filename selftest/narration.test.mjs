@@ -5,7 +5,7 @@ import fs from 'node:fs';
 
 const task = JSON.parse(fs.readFileSync(new URL('../tasks/_spoken-stat/task.json', import.meta.url)));
 const params = task.checks.find((c) => c.type === 'narrated_stat');
-const role = (text, y, h = 50) => ({text, x: 400, y, w: 900, h, o: 1, vw: 900, vh: h});
+const role = (text, y, h = 50) => ({text, x: 400, y, w: 900, h, o: 1, vw: 900, vh: h, textFits: true});
 function fixture(fps = 60) {
   return {fps, frames: Array.from({length: 6 * fps + 1}, (_, i) => ({t: Math.round(i / fps * 10000) / 10000, roles: {
     value: role(i / fps < 2.5 ? '1,283' : '1,284', 250, 220),
@@ -29,6 +29,7 @@ for (const [name, mutate, id] of [
   ['missing source', (c) => c.frames.forEach((f) => {delete f.roles.source;}), 'source stays'],
   ['clipped source', (c) => {c.frames[180].roles.source.vw = 0;}, 'source stays'],
   ['partly clipped source', (c) => {c.frames[180].roles.source.vh = 20;}, 'source stays'],
+  ['source overflows its own box', (c) => {c.frames[180].roles.source.textFits = false;}, 'source stays'],
   ['undersized source', (c) => {c.frames[180].roles.source.h = 20;}, 'source stays'],
   ['unsafe source', (c) => {c.frames[180].roles.source.x = 50;}, 'source stays'],
   ['translucent source', (c) => {c.frames[180].roles.source.o = 0.5;}, 'source stays'],

@@ -3,7 +3,7 @@
 const safe = (r, minHeight) => r && r.o >= 0.98 && r.h >= minHeight && r.w > 0 &&
   [r.x, r.y, r.w, r.h, r.o].every(Number.isFinite) &&
   r.x >= 96 && r.y >= 54 && r.x + r.w <= 1824 && r.y + r.h <= 1026 &&
-  r.vw >= r.w - 0.5 && r.vh >= r.h - 0.5;
+  r.vw >= r.w - 0.5 && r.vh >= r.h - 0.5 && r.textFits === true;
 const normalized = (s) => String(s ?? '').replace(/\s+/g, ' ').trim();
 const overlaps = (a, b) => Math.min(a.x + a.w, b.x + b.w) - Math.max(a.x, b.x) > 0.5 &&
   Math.min(a.y + a.h, b.y + b.h) - Math.max(a.y, b.y) > 0.5;

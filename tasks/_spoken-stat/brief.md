@@ -15,7 +15,7 @@ Show a hero counter (`data-role="value"`) starting at zero. Begin counting at
 at the 2.50 s cue. Keep the number whole, use thousands separators and tabular
 JetBrains Mono digits, and make it at least 120 px tall.
 
-Two separate text elements qualify the number:
+Two separate HTML text elements (use inline-block or block boxes) qualify the number:
 
 - `data-role="qualifier"`: **requests in the test run**, at least 40 px tall.
 - `data-role="source"`: **Source: synthetic fixture**, at least 32 px tall.

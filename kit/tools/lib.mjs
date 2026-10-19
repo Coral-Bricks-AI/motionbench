@@ -98,7 +98,9 @@ const PAGE = () => {
           x: round(b.left), y: round(b.top), w: round(b.width), h: round(b.height),
           o: round(shown(el) * 1000) / 1000, rot: round(rotation(el)), vw: round(vw), vh: round(vh),
           text: vt.text, end: vt.end,
-          textFits: el instanceof HTMLElement ? el.scrollWidth <= el.clientWidth + 1 && el.scrollHeight <= el.clientHeight + 1 : null,
+          textFits: el instanceof HTMLElement ?
+            (cs.overflowX === "visible" || el.scrollWidth <= el.clientWidth + 1) &&
+            (cs.overflowY === "visible" || el.scrollHeight <= el.clientHeight + 1) : null,
           color: cs.color, bg: cs.backgroundColor, fill: cs.fill, stroke: cs.stroke,
           font: cs.fontFamily, weight: cs.fontWeight,
         };

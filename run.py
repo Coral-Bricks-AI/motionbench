@@ -10,7 +10,7 @@ CORALBRICKS_API_KEY (scrubbed from the agent's shell); Grok 4.7 through xAI's Me
 MOTIONBENCH_CODEX_AUTH, inside a macOS sandbox-exec profile (seatbelt()). Results land in
 results/<model>/<task>/a<N>/.
 """
-import argparse, json, os, re, shutil, subprocess, sys, tempfile, time
+import argparse, json, os, re, shutil, subprocess, sys, tempfile, time, urllib.parse
 from concurrent.futures import ThreadPoolExecutor
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
@@ -29,6 +29,11 @@ MODELS = {
     "glm": {"model": "glm-5.3-fast", "gateway": "noimage"},  # text-only on CoralBricks
     # xAI's API speaks the Anthropic Messages protocol and Grok always reasons there.
     "grok": {"model": "grok-4.7", "base_url": "http://127.0.0.1:8796", "key_env": "XAI_TOKEN", "upstream": "https://api.x.ai"},
+    # GLM-5.3 left CoralBricks on 2026-10-19; later runs reach it on another provider's Anthropic Messages API, named
+    # in the environment (GLM_UPSTREAM, GLM_API_KEY). Same local treatment as the CoralBricks run: reasoning on with a
+    # 24k budget, images replaced by a note (text-only there too).
+    "glm-api": {"model": "glm-5.3", "base_url": "http://127.0.0.1:8797", "key_env": "GLM_API_KEY",
+                "upstream_env": "GLM_UPSTREAM", "proxy_args": ["24576", "noimage"]},
     # GPT runs in its own harness, Codex CLI, on the ChatGPT subscription Pi is logged in with.
     "gpt-sol": {"model": "gpt-6.1-sol", "harness": "codex"},
 }
@@ -158,7 +163,7 @@ def run_one(name, task, attempt, key, chome=None):
             env["ANTHROPIC_AUTH_TOKEN"] = key
         elif cfg.get("base_url"):
             if not os.environ.get(cfg["key_env"]):
-                sys.exit(f"set {cfg['key_env']} for {name}")
+                raise RuntimeError(f"set {cfg['key_env']} for {name}")  # fails this run only, not the batch
             env["ANTHROPIC_BASE_URL"] = cfg["base_url"]
             env["ANTHROPIC_AUTH_TOKEN"] = os.environ[cfg["key_env"]]
         else:
@@ -250,11 +255,17 @@ def main():
     if any(MODELS[m].get("gateway") == "plain" for m in models):
         procs.append(subprocess.Popen([sys.executable, os.path.join(ROOT, "thinking_proxy.py"), str(PLAIN_PORT), "0", "https://inference.coralbricks.ai", "plain"]))
     procs.append(subprocess.Popen([sys.executable, os.path.join(ROOT, "connect_proxy.py"), str(CONNECT_PORT),
-                                   "chatgpt.com", "openai.com", "anthropic.com", "claude.ai", "claude.com", "inference.coralbricks.ai", "api.x.ai"]))
+                                   "chatgpt.com", "openai.com", "anthropic.com", "claude.ai", "claude.com", "inference.coralbricks.ai", "api.x.ai",
+                                   *[urllib.parse.urlparse(os.environ[MODELS[m]["upstream_env"]]).hostname for m in models if MODELS[m].get("upstream_env") and os.environ.get(MODELS[m]["upstream_env"])]]))
     if any(MODELS[m].get("harness") == "codex" for m in models):
         chome = codex_home()
-    if "grok" in models:
-        procs.append(subprocess.Popen([sys.executable, os.path.join(ROOT, "thinking_proxy.py"), "8796", "0", "https://api.x.ai"]))
+    for m in models:  # a direct provider behind its own local proxy (Grok, GLM since it left CoralBricks)
+        cfg = MODELS[m]
+        upstream = cfg.get("upstream") or os.environ.get(cfg.get("upstream_env") or "")
+        if upstream:
+            budget, *flags = cfg.get("proxy_args", ["0"])
+            port = cfg["base_url"].rsplit(":", 1)[1]
+            procs.append(subprocess.Popen([sys.executable, os.path.join(ROOT, "thinking_proxy.py"), port, budget, upstream, *([",".join(flags)] if flags else [])]))
     time.sleep(1)
     try:
         with ThreadPoolExecutor(a.jobs) as ex:

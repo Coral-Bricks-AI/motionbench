@@ -16,7 +16,7 @@ and run records): **[huggingface.co/datasets/coral-bricks-ai/motionbench](https:
 | DeepSeek V4.1 Flash | Claude Code | **0.968** (0.944–0.988) | 0.839 | 0.843 | 0.833 | 0.703 | $0.071 | 43,836 | 38 | 7.7 |
 | Claude Sonnet 5.5 | Claude Code | **0.945** (0.906–0.978) | 0.861 | 0.817 | 0.933 | 0.716 | $0.281 | 14,633 | 12 | 2.3 |
 | GLM-5.3 | Claude Code | **0.939** (0.901–0.972) | 0.914 | 0.862 | 1.000 | 0.699 | $0.262 | 26,520 | 20 | 3.1 |
-| Grok 4.7 | Claude Code | **0.925** (0.873–0.970) | 0.873 | 0.817 | 0.967 | 0.676 | $0.762 | 13,555 | 44 | 8.0 |
+| Grok 4.7 | Claude Code | **0.925** (0.873–0.970) | 0.873 | 0.817 | 0.967 | 0.677 | $0.762 | 13,555 | 44 | 8.0 |
 | Claude Haiku 5.5 | Claude Code | **0.911** (0.862–0.956) | 0.871 | 0.874 | 0.867 | 0.738 | $0.027 | 28,541 | 14 | 2.6 |
 | DeepSeek V4.1 Flash, no reasoning | Claude Code | **0.790** (0.726–0.854) | 0.841 | 0.785 | 0.933 | 0.750 | $0.043 | 21,802 | 50 | 6.3 |
 
@@ -152,6 +152,10 @@ provider's hosts and nothing else.
   them into the same user turn for every gateway run; GLM-5.3 takes no images at all there, so its images
   are replaced by a note saying so. Grok 4.7 runs through xAI's Messages API, which rejects Claude Code's
   mid-conversation system-role messages, so the proxy folds those into the neighbouring user turn.
+  GLM-5.3 left CoralBricks on 2026-10-19. Runs after that (`glm-api`, starting with the experimental
+  `_spoken-stat`) use `glm-5.3` on another provider's Messages API (`GLM_UPSTREAM`, `GLM_API_KEY`) with the
+  same treatment: reasoning on at a 24k budget, images replaced by a note. The leaderboard's GLM row is still
+  the CoralBricks run.
 - **Codex CLI 0.162** for GPT-6.1 Sol (its own harness) on a ChatGPT login (`MOTIONBENCH_CODEX_AUTH` = a Codex
   `auth.json`, copied into a throwaway `CODEX_HOME`).
 

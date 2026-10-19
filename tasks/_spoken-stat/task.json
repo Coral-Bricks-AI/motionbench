@@ -1,0 +1,20 @@
+{
+  "id": "_spoken-stat",
+  "track": "experimental",
+  "principle": "narration timing and qualified claims",
+  "duration": 6,
+  "fps": 60,
+  "roles": ["value", "qualifier", "source"],
+  "checks": [
+    {"type": "count", "role": "value", "start": 0.5, "land": 2.5, "to": 1284, "mid": 0.6, "min_h": 120},
+    {"type": "narrated_stat", "value": "value", "target": "1,284", "cue": 2.5, "hold_to": 5.5,
+      "tolerance_frames": 2, "value_min_h": 120,
+      "copy": [
+        {"role": "qualifier", "text": "requests in the test run", "min_h": 40},
+        {"role": "source", "text": "Source: synthetic fixture", "min_h": 32}
+      ]}
+  ],
+  "shots": [0, 0.5, 1.5, 2.5, 4, 5.5],
+  "pixels": {},
+  "oscillate": []
+}

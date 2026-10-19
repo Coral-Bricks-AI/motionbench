@@ -165,6 +165,11 @@ takes the pixels a task needs, and checks seeking out of order and after a fresh
 
 ## Commands
 
+An opt-in [narration-synced statistic task](tasks/_spoken-stat/README.md) tests
+cue timing and preservation of a claim's qualifier and source. It is experimental
+and excluded from the default task list; keep its results separate from the
+published leaderboard.
+
 ```sh
 cd kit && npm install && npx playwright-core install chromium-headless-shell   # gsap 3.15, playwright-core 1.63, pngjs
 python3 tasks/_make.py                     # (re)write the task folders

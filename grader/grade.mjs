@@ -4,14 +4,14 @@
 import fs from "node:fs";
 import path from "node:path";
 import { createRequire } from "node:module";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import { run, rgb } from "./checks.mjs";
 import { analyse } from "./polish.mjs";
 import * as appeal from "./appeal.mjs";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const KIT = path.join(HERE, "..", "kit");
-const { open, sheet, shrink } = await import(path.join(KIT, "tools", "lib.mjs"));
+const { open, sheet, shrink } = await import(pathToFileURL(path.join(KIT, "tools", "lib.mjs")).href);
 const { PNG } = createRequire(path.join(KIT, "package.json"))("pngjs");
 
 const [ws, taskDir] = process.argv.slice(2);

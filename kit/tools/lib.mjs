@@ -4,6 +4,7 @@ import { chromium } from "playwright-core";
 import { PNG } from "pngjs";
 import fs from "node:fs";
 import path from "node:path";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
 export const W = 1920, H = 1080;
 
@@ -214,14 +215,19 @@ export async function open(dir, { headless = true } = {}) {
   await page.route("**/*", (r) => {
     const u = r.request().url();
     if (u.startsWith("data:") || u.startsWith("blob:")) return r.continue();
-    if (u.startsWith("file://") && decodeURIComponent(new URL(u).pathname).startsWith(root + "/")) return r.continue();
+    if (u.startsWith("file://")) {
+      try {
+        const relative = path.relative(root, fileURLToPath(u));
+        if (relative && relative !== ".." && !relative.startsWith(".." + path.sep) && !path.isAbsolute(relative)) return r.continue();
+      } catch {} // Malformed or non-local file URLs are blocked below.
+    }
     log.network.push(u.slice(0, 200));
     return r.abort();
   });
   const index = path.join(root, "index.html");
   if (!fs.existsSync(index)) { await browser.close(); return { error: "no index.html", log }; }
   try {
-    await page.goto("file://" + index, { waitUntil: "load", timeout: 20000 });
+    await page.goto(pathToFileURL(index).href, { waitUntil: "load", timeout: 20000 });
     await page.evaluate(() => document.fonts.ready.then(() => 0));
     await page.waitForFunction(() => window.__timelines && window.__timelines.main && typeof window.__timelines.main.seek === "function", null, { timeout: 5000 });
   } catch (e) {

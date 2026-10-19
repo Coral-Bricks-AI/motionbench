@@ -1,5 +1,6 @@
 // Every check motionbench runs. A check reads the measured frames (and, for a few, pixels) and
 // returns one or more {id, pass, got, want}. No model judges anything.
+import { narratedStat } from './narration.mjs';
 
 export const FRAME = { W: 1920, H: 1080, SAFE: [96, 54, 1824, 1026] };
 
@@ -78,6 +79,7 @@ const colourOf = (r) => [r.bg, r.fill, r.stroke, r.color].map(rgb).filter((c) =>
 
 // ---------- task checks ----------
 const T = {};
+T.narrated_stat = narratedStat;
 
 T.at = (ctx, p) => {
   const v = series(ctx, p.role, p.key);

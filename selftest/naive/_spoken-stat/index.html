@@ -1,0 +1,16 @@
+<!doctype html><html><head><meta charset="utf-8"><style>
+@font-face{font-family:"Open Sauce Two";src:url(assets/fonts/OpenSauceTwo-Regular.ttf)}
+@font-face{font-family:"JetBrains Mono";src:url(assets/fonts/JetBrainsMono-Regular.woff2)}
+html,body{margin:0;width:1920px;height:1080px;overflow:hidden;background:#F9F9FA;color:#0A0C11;font-family:"Open Sauce Two"}
+.row{position:absolute;left:200px;width:1520px;text-align:center}
+#value{display:inline-block;font:220px/1 "JetBrains Mono";font-variant-numeric:tabular-nums;color:#BB3822}
+</style></head><body>
+<div class="row" style="top:250px"><div id="value" data-role="value">0</div></div>
+<div class="row" style="top:520px"><span data-role="qualifier" style="display:inline-block;font-size:52px;line-height:1.2">requests per second</span></div>
+<div class="row" style="top:650px"><span data-role="source" style="display:inline-block;font-size:36px;line-height:1.2">Synthetic fixture</span></div>
+<script src="assets/gsap.min.js"></script><script>
+const tl=gsap.timeline({paused:true}), p={n:0}, value=document.querySelector('#value');
+tl.to(p,{n:1284,duration:1.5,ease:'power3.out',onUpdate:()=>{value.textContent=Math.floor(p.n).toLocaleString('en-US');}},0.5);
+tl.set({}, {}, 6);
+window.__timelines={main:tl};
+</script></body></html>
